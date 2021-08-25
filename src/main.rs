@@ -44,19 +44,77 @@ fn setup(
     commands.spawn_bundle(UiCameraBundle::default());
 
     // Font
-    let main_font = asset_server.load("korinan.ttf");
+    //let mut main_font: Handle<Font> = asset_server.load("korinan.ttf");
+
+    // Set up coordinate values
+    let mut x_values: Vec<f32> = vec![0., 0., 0., 0., 0.];
+    let mut n: f32 = 5. - 0.35;
+    for i in 0..5 {
+        x_values[i] = n as f32 * (window.width() / 5.);
+        n -= 1.
+    }
+
+    let mut y_values: Vec<f32> = vec![0., 0., 0., 0., 0., 0., 0.];
+    let mut n: f32 = 7. - 0.35;
+    for i in 0..7 {
+        y_values[i] = n as f32 * (window.height() / 7.);
+        n -= 1.
+    }
 
     // Make the title
     let title = gen_text(
         "JEOPARDY",
-        Vec2::new(window.width() / 2., window.height() - 65.),
-        main_font,
+        Vec2::new(window.width() / 2., y_values[0]),
+        asset_server.load("korinan.ttf"),
         100.0,
+        Color::YELLOW,
     );
     commands.spawn_bundle(title).insert(TextObj);
+
+    // Make the categories
+    let categories: Vec<&str> = vec![
+        "Category 1",
+        "Category 2",
+        "Category 3",
+        "Category 4",
+        "Category 5",
+    ];
+
+    let mut index: usize = 0;
+    for category in &categories {
+        let x: f32 = x_values[index];
+        let y: f32 = y_values[1];
+        let cat: TextBundle = gen_text(
+            category,
+            Vec2::new(x, y),
+            asset_server.load("korinan.ttf"),
+            50.,
+            Color::WHITE,
+        );
+        commands.spawn_bundle(cat).insert(TextObj);
+        index += 1;
+    }
+
+    let amounts: Vec<&str> = vec!["$400", "$800", "$1200", "$1600", "$2000"];
+    let mut y_index: usize = 2;
+    for amount in &amounts {
+        for i in 0..5 {
+            let x: f32 = x_values[i];
+            let y: f32 = y_values[y_index];
+            let a: TextBundle = gen_text(
+                amount,
+                Vec2::new(x, y),
+                asset_server.load("korinan.ttf"),
+                50.,
+                Color::ORANGE,
+            );
+            commands.spawn_bundle(a).insert(TextObj);
+        }
+        y_index += 1;
+    }
 }
 
-fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32) -> TextBundle {
+fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> TextBundle {
     return TextBundle {
         style: Style {
             align_self: AlignSelf::Center,
@@ -74,7 +132,7 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32) -> TextBundle {
             TextStyle {
                 font: font,
                 font_size: size,
-                color: Color::WHITE,
+                color: color,
             },
             TextAlignment {
                 horizontal: HorizontalAlign::Center,
