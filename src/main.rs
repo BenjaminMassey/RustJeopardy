@@ -1,6 +1,10 @@
 #![allow(unused)]
 
-use bevy::prelude::*;
+use bevy::{
+    input::mouse::{mouse_button_input_system, MouseButtonInput},
+    prelude::*,
+    reflect::TypeData,
+};
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
@@ -10,10 +14,11 @@ struct WinSize {
 }
 
 struct TextObj;
+struct BoxObj;
 
 fn main() {
     App::build()
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 1.0)))
+        .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WindowDescriptor {
             title: "Jeopardy".to_string(),
             width: 1800.0,
@@ -22,6 +27,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
+        .add_system(user_click.system())
         .run();
 }
 
@@ -47,10 +53,10 @@ fn setup(
     //let mut main_font: Handle<Font> = asset_server.load("korinan.ttf");
 
     // Set up coordinate values
-    let mut x_values: Vec<f32> = vec![0., 0., 0., 0., 0.];
-    let mut n: f32 = 5. - 0.35;
-    for i in 0..5 {
-        x_values[i] = n as f32 * (window.width() / 5.);
+    let mut x_values: Vec<f32> = vec![0., 0., 0., 0., 0., 0.];
+    let mut n: f32 = 6. - 0.35;
+    for i in 0..6 {
+        x_values[i] = n as f32 * (window.width() / 6.);
         n -= 1.
     }
 
@@ -63,7 +69,7 @@ fn setup(
 
     // Make the title
     let title = gen_text(
-        "JEOPARDY",
+        "MARIO JEOPARDY",
         Vec2::new(window.width() / 2., y_values[0]),
         asset_server.load("korinan.ttf"),
         100.0,
@@ -78,6 +84,7 @@ fn setup(
         "Category 3",
         "Category 4",
         "Category 5",
+        "Category 6",
     ];
 
     let mut index: usize = 0;
@@ -95,14 +102,15 @@ fn setup(
         index += 1;
     }
 
-    let amounts: Vec<&str> = vec!["$400", "$800", "$1200", "$1600", "$2000"];
+    let amounts: Vec<i32> = vec![200, 400, 600, 800, 1000];
     let mut y_index: usize = 2;
     for amount in &amounts {
-        for i in 0..5 {
+        for i in 0..6 {
             let x: f32 = x_values[i];
             let y: f32 = y_values[y_index];
+            let text = format!("${}", amount);
             let a: TextBundle = gen_text(
-                amount,
+                &text.to_string(),
                 Vec2::new(x, y),
                 asset_server.load("korinan.ttf"),
                 50.,
@@ -111,6 +119,19 @@ fn setup(
             commands.spawn_bundle(a).insert(TextObj);
         }
         y_index += 1;
+    }
+
+    let blue_box: SpriteBundle = gen_box(Vec2::new(250., 125.), materials);
+
+    for i in 0..6 {
+        for j in 1..7 {
+            let mut new_box: SpriteBundle = blue_box.clone();
+            new_box.transform = Transform {
+                translation: Vec3::new(x_values[i] - 975., y_values[j] - 506., 10.),
+                ..Default::default()
+            };
+            commands.spawn_bundle(new_box).insert(BoxObj);
+        }
     }
 }
 
@@ -142,4 +163,20 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
         ),
         ..Default::default()
     };
+}
+
+fn gen_box(size: Vec2, mut ac: ResMut<Assets<ColorMaterial>>) -> SpriteBundle {
+    return SpriteBundle {
+        material: ac.add((Color::BLUE).into()),
+        sprite: Sprite::new(size),
+        ..Default::default()
+    };
+}
+
+fn user_click(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, windows: Res<Windows>) {
+    if mouse_input.just_pressed(MouseButton::Left) {
+        let win = windows.get_primary().expect("No Window");
+        let mouse_pos: Vec2 = win.cursor_position().expect("No Mouse Pos");
+        println!("{}, {}", mouse_pos.x, mouse_pos.y);
+    }
 }
