@@ -16,6 +16,9 @@ struct WinSize {
 
 struct TextObj;
 struct BoxObj;
+struct ClueBox;
+
+struct ClueText;
 
 fn main() {
     App::build()
@@ -122,7 +125,11 @@ fn setup(
         y_index += 1;
     }
 
-    let blue_box: SpriteBundle = gen_box(Vec2::new(250., 125.), materials);
+    let blue_box: SpriteBundle = SpriteBundle {
+        material: materials.add((Color::BLUE).into()),
+        sprite: Sprite::new(Vec2::new(250., 125.)),
+        ..Default::default()
+    };
 
     for i in 0..6 {
         for j in 1..7 {
@@ -172,20 +179,14 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
     };
 }
 
-fn gen_box(size: Vec2, mut ac: ResMut<Assets<ColorMaterial>>) -> SpriteBundle {
-    return SpriteBundle {
-        material: ac.add((Color::BLUE).into()),
-        sprite: Sprite::new(size),
-        ..Default::default()
-    };
-}
-
 fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
     mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
-    mut text_query: Query<(Entity, &Transform, &Sprite, With<TextObj>)>,
+    mut text_query: Query<(Entity, With<TextObj>)>,
+    mut clue_text_query: Query<(Entity, With<ClueText>)>,
     windows: Res<Windows>,
+    asset_server: Res<AssetServer>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         let win = windows.get_primary().expect("No Window");
@@ -205,15 +206,48 @@ fn user_click(
                 && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
             {
                 commands.entity(box_entity).despawn();
-                do_clue(i);
+                /*
+                let mut j: i32 = 1;
+                for (text_entity, _) in text_query.iter_mut() {
+                    //println!("j{}", j);
+                    if (i == text_to_box_coords(j - 2)) {
+                        commands.entity(text_entity).despawn();
+                        break;
+                    }
+                    j += 1;
+                }
+                */
+                for (clue_text_entity, _) in clue_text_query.iter_mut() {
+                    commands.entity(clue_text_entity).despawn();
+                }
+                let clue_text: &str = get_clue(i);
+                let clue: TextBundle = gen_text(
+                    clue_text,
+                    Vec2::new(win.width() / 2., win.height() / 2.),
+                    asset_server.load("korinan.ttf"),
+                    200.,
+                    Color::WHITE,
+                );
+                commands.spawn_bundle(clue).insert(ClueText);
+                break;
             }
             i += 1;
         }
     }
 }
 
-fn do_clue(index: i32) {
-    println!("Here's clue {}", index);
+fn text_to_box_coords(n: i32) -> i32 {
+    if (n < 0 || n > 35) {
+        return -1;
+    };
+    let nums: [i32; 36] = [
+        30, 24, 18, 12, 6, 0, 31, 25, 19, 13, 7, 1, 32, 26, 20, 14, 8, 2, 33, 27, 21, 15, 9, 3, 34,
+        28, 22, 16, 10, 4, 35, 29, 23, 17, 11, 5,
+    ];
+    return nums[n as usize];
+}
+
+fn get_clue(index: i32) -> &'static str {
     let mut clues: [&str; 36] = [
         "CATEGORY 6",
         "C6 1",
@@ -253,4 +287,5 @@ fn do_clue(index: i32) {
         "C1 5",
     ];
     println!("{}", clues[index as usize]);
+    return clues[index as usize];
 }
