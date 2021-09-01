@@ -20,6 +20,8 @@ struct ClueBox;
 
 struct ClueText;
 
+struct ReadingClue(bool);
+
 fn main() {
     App::build()
         .insert_resource(ClearColor(Color::BLACK))
@@ -29,6 +31,7 @@ fn main() {
             height: 1012.0,
             ..Default::default()
         })
+        .insert_resource(ReadingClue(false))
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
         .add_system(user_click.system())
@@ -189,65 +192,73 @@ fn user_click(
     windows: Res<Windows>,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut reading: ResMut<ReadingClue>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
-        let win = windows.get_primary().expect("No Window");
-        let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
-        let mouse_pos: Vec2 = Vec2::new(
-            mouse_pos_raw.x - (win.width() / 2.),
-            mouse_pos_raw.y - (win.height() / 2.),
-        );
-        //println!("{}, {}", mouse_pos.x, mouse_pos.y);
-        let mut i: i32 = 0;
-        for (box_entity, box_tf, box_sprite, _) in box_query.iter_mut() {
-            //println!("Box: {}", box_tf.translation);
-            if ((i % 6) != 0
-                && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
-                && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
-                && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
-                && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
-            {
-                commands.entity(box_entity).despawn();
-                /*
-                let mut j: i32 = 1;
-                for (text_entity, _) in text_query.iter_mut() {
-                    //println!("j{}", j);
-                    if (i == text_to_box_coords(j - 2)) {
-                        commands.entity(text_entity).despawn();
-                        break;
-                    }
-                    j += 1;
-                }
-                */
-                for (clue_box_entity, _) in clue_box_query.iter_mut() {
-                    commands.entity(clue_box_entity).despawn();
-                }
-                let mut clue_box = SpriteBundle {
-                    material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                    sprite: Sprite::new(Vec2::new(400., 400.)),
-                    ..Default::default()
-                };
-                clue_box.transform = Transform {
-                    translation: Vec3::new(0., 0., 15.),
-                    ..Default::default()
-                };
-                commands.spawn_bundle(clue_box).insert(ClueBox);
-
-                for (clue_text_entity, _) in clue_text_query.iter_mut() {
-                    commands.entity(clue_text_entity).despawn();
-                }
-                let clue_text: &str = get_clue(i);
-                let clue: TextBundle = gen_text(
-                    clue_text,
-                    Vec2::new(win.width() / 2., win.height() / 2.),
-                    asset_server.load("korinan.ttf"),
-                    200.,
-                    Color::WHITE,
-                );
-                commands.spawn_bundle(clue).insert(ClueText);
-                break;
+        if (reading.0) {
+            for (clue_text_entity, _) in clue_text_query.iter_mut() {
+                commands.entity(clue_text_entity).despawn();
             }
-            i += 1;
+            for (clue_box_entity, _) in clue_box_query.iter_mut() {
+                commands.entity(clue_box_entity).despawn();
+            }
+            reading.0 = !reading.0;
+        } else {
+            let win = windows.get_primary().expect("No Window");
+            let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
+            let mouse_pos: Vec2 = Vec2::new(
+                mouse_pos_raw.x - (win.width() / 2.),
+                mouse_pos_raw.y - (win.height() / 2.),
+            );
+            //println!("{}, {}", mouse_pos.x, mouse_pos.y);
+            let mut i: i32 = 0;
+            for (box_entity, box_tf, box_sprite, _) in box_query.iter_mut() {
+                //println!("Box: {}", box_tf.translation);
+                if ((i % 6) != 0
+                    && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
+                    && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
+                    && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
+                    && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
+                {
+                    commands.entity(box_entity).despawn();
+                    /* TO BE FIXED
+                    let mut j: i32 = 1;
+                    for (text_entity, _) in text_query.iter_mut() {
+                        //println!("j{}", j);
+                        if (i == text_to_box_coords(j - 2)) {
+                            commands.entity(text_entity).despawn();
+                            break;
+                        }
+                        j += 1;
+                    }
+                    */
+                    let mut clue_box = SpriteBundle {
+                        material: materials.add((Color::MIDNIGHT_BLUE).into()),
+                        sprite: Sprite::new(Vec2::new(400., 400.)),
+                        ..Default::default()
+                    };
+                    clue_box.transform = Transform {
+                        translation: Vec3::new(0., 0., 15.),
+                        ..Default::default()
+                    };
+                    commands.spawn_bundle(clue_box).insert(ClueBox);
+
+                    let clue_text: &str = get_clue(i);
+                    let clue: TextBundle = gen_text(
+                        clue_text,
+                        Vec2::new(win.width() / 2., win.height() / 2.),
+                        asset_server.load("korinan.ttf"),
+                        200.,
+                        Color::WHITE,
+                    );
+                    commands.spawn_bundle(clue).insert(ClueText);
+
+                    reading.0 = !reading.0;
+
+                    break;
+                }
+                i += 1;
+            }
         }
     }
 }
@@ -302,6 +313,6 @@ fn get_clue(index: i32) -> &'static str {
         "C1 4",
         "C1 5",
     ];
-    println!("{}", clues[index as usize]);
+    //println!("{}", clues[index as usize]);
     return clues[index as usize];
 }
