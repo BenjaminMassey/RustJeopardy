@@ -184,9 +184,11 @@ fn user_click(
     mouse_input: Res<Input<MouseButton>>,
     mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
     mut text_query: Query<(Entity, With<TextObj>)>,
+    mut clue_box_query: Query<(Entity, With<ClueBox>)>,
     mut clue_text_query: Query<(Entity, With<ClueText>)>,
     windows: Res<Windows>,
     asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         let win = windows.get_primary().expect("No Window");
@@ -217,6 +219,20 @@ fn user_click(
                     j += 1;
                 }
                 */
+                for (clue_box_entity, _) in clue_box_query.iter_mut() {
+                    commands.entity(clue_box_entity).despawn();
+                }
+                let mut clue_box = SpriteBundle {
+                    material: materials.add((Color::MIDNIGHT_BLUE).into()),
+                    sprite: Sprite::new(Vec2::new(400., 400.)),
+                    ..Default::default()
+                };
+                clue_box.transform = Transform {
+                    translation: Vec3::new(0., 0., 15.),
+                    ..Default::default()
+                };
+                commands.spawn_bundle(clue_box).insert(ClueBox);
+
                 for (clue_text_entity, _) in clue_text_query.iter_mut() {
                     commands.entity(clue_text_entity).despawn();
                 }
