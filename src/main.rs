@@ -4,6 +4,7 @@ use bevy::{
     input::mouse::{mouse_button_input_system, MouseButtonInput},
     prelude::*,
     reflect::TypeData,
+    sprite::collide_aabb::collide,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -126,8 +127,14 @@ fn setup(
     for i in 0..6 {
         for j in 1..7 {
             let mut new_box: SpriteBundle = blue_box.clone();
+
+            println!("{}", (window.width() / 2.));
             new_box.transform = Transform {
-                translation: Vec3::new(x_values[i] - 975., y_values[j] - 506., 10.),
+                translation: Vec3::new(
+                    x_values[i] - (window.width() / 1.9), // idk why 1.9, just seems to work
+                    y_values[j] - (window.height() / 2.),
+                    10.,
+                ),
                 ..Default::default()
             };
             commands.spawn_bundle(new_box).insert(BoxObj);
@@ -173,10 +180,44 @@ fn gen_box(size: Vec2, mut ac: ResMut<Assets<ColorMaterial>>) -> SpriteBundle {
     };
 }
 
-fn user_click(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, windows: Res<Windows>) {
+fn user_click(
+    mut commands: Commands,
+    mouse_input: Res<Input<MouseButton>>,
+    mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
+    windows: Res<Windows>,
+) {
     if mouse_input.just_pressed(MouseButton::Left) {
         let win = windows.get_primary().expect("No Window");
-        let mouse_pos: Vec2 = win.cursor_position().expect("No Mouse Pos");
+        /*  unneeded without collide(...) usage
+        let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
+        let mouse_pos: Vec3 = Vec3::new(
+            mouse_pos_raw.x - (win.width() / 2.),
+            mouse_pos_raw.y - (win.height() / 2.),
+            10.,
+        );
+        let ten: Vec2 = Vec2::new(10., 10.);
+        */
+        let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
+        let mouse_pos: Vec2 = Vec2::new(
+            mouse_pos_raw.x - (win.width() / 2.),
+            mouse_pos_raw.y - (win.height() / 2.),
+        );
         println!("{}, {}", mouse_pos.x, mouse_pos.y);
+        for (box_entity, box_tf, box_sprite, _) in box_query.iter_mut() {
+            println!("Box: {}", box_tf.translation);
+            if (mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
+                && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
+                && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
+                && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
+            {
+                commands.entity(box_entity).despawn();
+            }
+            /* collide(...) doesn't seem to support iternal collisions, ie point in rect
+            let collision = collide(mouse_pos, ten, box_tf.translation, box_sprite.size);
+            if let Some(_) = collision {
+                commands.entity(box_entity).despawn();
+            }
+            */
+        }
     }
 }
