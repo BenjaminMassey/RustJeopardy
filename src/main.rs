@@ -128,7 +128,7 @@ fn setup(
         for j in 1..7 {
             let mut new_box: SpriteBundle = blue_box.clone();
 
-            println!("{}", (window.width() / 2.));
+            //println!("{}", (window.width() / 2.));
             new_box.transform = Transform {
                 translation: Vec3::new(
                     x_values[i] - (window.width() / 1.9), // idk why 1.9, just seems to work
@@ -184,40 +184,73 @@ fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
     mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
+    mut text_query: Query<(Entity, &Transform, &Sprite, With<TextObj>)>,
     windows: Res<Windows>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         let win = windows.get_primary().expect("No Window");
-        /*  unneeded without collide(...) usage
-        let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
-        let mouse_pos: Vec3 = Vec3::new(
-            mouse_pos_raw.x - (win.width() / 2.),
-            mouse_pos_raw.y - (win.height() / 2.),
-            10.,
-        );
-        let ten: Vec2 = Vec2::new(10., 10.);
-        */
         let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
         let mouse_pos: Vec2 = Vec2::new(
             mouse_pos_raw.x - (win.width() / 2.),
             mouse_pos_raw.y - (win.height() / 2.),
         );
-        println!("{}, {}", mouse_pos.x, mouse_pos.y);
+        //println!("{}, {}", mouse_pos.x, mouse_pos.y);
+        let mut i: i32 = 0;
         for (box_entity, box_tf, box_sprite, _) in box_query.iter_mut() {
-            println!("Box: {}", box_tf.translation);
-            if (mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
+            //println!("Box: {}", box_tf.translation);
+            if ((i % 6) != 0
+                && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
                 && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
                 && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
                 && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
             {
                 commands.entity(box_entity).despawn();
+                do_clue(i);
             }
-            /* collide(...) doesn't seem to support iternal collisions, ie point in rect
-            let collision = collide(mouse_pos, ten, box_tf.translation, box_sprite.size);
-            if let Some(_) = collision {
-                commands.entity(box_entity).despawn();
-            }
-            */
+            i += 1;
         }
     }
+}
+
+fn do_clue(index: i32) {
+    println!("Here's clue {}", index);
+    let mut clues: [&str; 36] = [
+        "CATEGORY 6",
+        "C6 1",
+        "C6 2",
+        "C6 3",
+        "C6 4",
+        "C6 5",
+        "CATEGORY 5",
+        "C5 1",
+        "C5 2",
+        "C5 3",
+        "C5 4",
+        "C5 5",
+        "CATEGORY 4",
+        "C4 1",
+        "C4 2",
+        "C4 3",
+        "C4 4",
+        "C4 5",
+        "CATEGORY 3",
+        "C3 1",
+        "C3 2",
+        "C3 3",
+        "C3 4",
+        "C3 5",
+        "CATEGORY 2",
+        "C2 1",
+        "C2 2",
+        "C2 3",
+        "C2 4",
+        "C2 5",
+        "CATEGORY 1",
+        "C1 1",
+        "C1 2",
+        "C1 3",
+        "C1 4",
+        "C1 5",
+    ];
+    println!("{}", clues[index as usize]);
 }
