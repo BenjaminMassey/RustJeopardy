@@ -203,9 +203,13 @@ fn user_click(
             for (clue_box_entity, _) in clue_box_query.iter_mut() {
                 commands.entity(clue_box_entity).despawn();
             }
+            let mut text_iter: i32 = 0;
             for (text_entity, mut text_style, _) in text_query.iter_mut() {
-                // TODO: I WANT SOMETHING TEMPORARY AND BETTER HERE
-                //println!("Working");
+                if (text_iter < 7) {
+                    // To keep categories + title unmoved
+                    text_iter += 1;
+                    continue;
+                }
                 let new_bottom: Val = text_style.position.bottom + (-5000.);
                 let new_right: Val = text_style.position.right + (-5000.);
                 text_style.position = Rect {
@@ -213,7 +217,6 @@ fn user_click(
                     right: new_right,
                     ..Default::default()
                 }
-                //commands.entity(text_entity).despawn();
             }
             reading.0 = !reading.0;
         } else {
@@ -265,15 +268,20 @@ fn user_click(
                         Color::WHITE,
                     );
                     commands.spawn_bundle(clue).insert(ClueText);
-
+                    let mut text_iter: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
+                        if (text_iter < 7) {
+                            // To keep categories + title unmoved
+                            text_iter += 1;
+                            continue;
+                        }
                         let new_bottom: Val = text_style.position.bottom + 5000.;
                         let new_right: Val = text_style.position.right + 5000.;
                         text_style.position = Rect {
                             bottom: new_bottom,
                             right: new_right,
                             ..Default::default()
-                        }
+                        };
                     }
 
                     reading.0 = !reading.0;
