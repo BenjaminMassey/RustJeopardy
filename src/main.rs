@@ -5,6 +5,7 @@ use bevy::{
     prelude::*,
     reflect::TypeData,
     sprite::collide_aabb::collide,
+    text,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -186,7 +187,7 @@ fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
     mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
-    mut text_query: Query<(Entity, With<TextObj>)>,
+    mut text_query: Query<(Entity, &mut Style, With<TextObj>)>,
     mut clue_box_query: Query<(Entity, With<ClueBox>)>,
     mut clue_text_query: Query<(Entity, With<ClueText>)>,
     windows: Res<Windows>,
@@ -201,6 +202,18 @@ fn user_click(
             }
             for (clue_box_entity, _) in clue_box_query.iter_mut() {
                 commands.entity(clue_box_entity).despawn();
+            }
+            for (text_entity, mut text_style, _) in text_query.iter_mut() {
+                // TODO: I WANT SOMETHING TEMPORARY AND BETTER HERE
+                //println!("Working");
+                let new_bottom: Val = text_style.position.bottom + (-5000.);
+                let new_right: Val = text_style.position.right + (-5000.);
+                text_style.position = Rect {
+                    bottom: new_bottom,
+                    right: new_right,
+                    ..Default::default()
+                }
+                //commands.entity(text_entity).despawn();
             }
             reading.0 = !reading.0;
         } else {
@@ -221,11 +234,11 @@ fn user_click(
                     && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
                 {
                     commands.entity(box_entity).despawn();
-                    /* TO BE FIXED
-                    let mut j: i32 = 1;
-                    for (text_entity, _) in text_query.iter_mut() {
+                    /* TODO: this just doesn't work as wanted
+                    let mut j: i32 = 0;
+                    for (text_entity, mut text_style, _) in text_query.iter_mut() {
                         //println!("j{}", j);
-                        if (i == text_to_box_coords(j - 2)) {
+                        if (i == text_to_box_coords(j)) {
                             commands.entity(text_entity).despawn();
                             break;
                         }
@@ -234,7 +247,7 @@ fn user_click(
                     */
                     let mut clue_box = SpriteBundle {
                         material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(400., 400.)),
+                        sprite: Sprite::new(Vec2::new(600., 400.)),
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
@@ -253,6 +266,16 @@ fn user_click(
                     );
                     commands.spawn_bundle(clue).insert(ClueText);
 
+                    for (text_entity, mut text_style, _) in text_query.iter_mut() {
+                        let new_bottom: Val = text_style.position.bottom + 5000.;
+                        let new_right: Val = text_style.position.right + 5000.;
+                        text_style.position = Rect {
+                            bottom: new_bottom,
+                            right: new_right,
+                            ..Default::default()
+                        }
+                    }
+
                     reading.0 = !reading.0;
 
                     break;
@@ -263,6 +286,7 @@ fn user_click(
     }
 }
 
+/* TODO: part of broken code above
 fn text_to_box_coords(n: i32) -> i32 {
     if (n < 0 || n > 35) {
         return -1;
@@ -273,6 +297,7 @@ fn text_to_box_coords(n: i32) -> i32 {
     ];
     return nums[n as usize];
 }
+*/
 
 fn get_clue(index: i32) -> &'static str {
     let mut clues: [&str; 36] = [
