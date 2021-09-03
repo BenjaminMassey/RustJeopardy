@@ -250,17 +250,23 @@ fn user_click(
 
                     box_tf.translation = Vec3::new(9000., 9000., 15.);
 
-                    /* TODO: this just doesn't work as wanted
+                    // TODO: this just doesn't work as wanted
                     let mut j: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
                         //println!("j{}", j);
-                        if (i == text_to_box_coords(j)) {
-                            commands.entity(text_entity).despawn();
+                        if (i == text_to_box_coords(j - 1)) {
+                            let new_bottom: Val = text_style.position.bottom + 5000.;
+                            let new_right: Val = text_style.position.right + 5000.;
+                            text_style.position = Rect {
+                                bottom: new_bottom,
+                                right: new_right,
+                                ..Default::default()
+                            };
                             break;
                         }
                         j += 1;
                     }
-                    */
+
                     let mut clue_box = SpriteBundle {
                         material: materials.add((Color::MIDNIGHT_BLUE).into()),
                         sprite: Sprite::new(Vec2::new(800., 320.)),
@@ -310,7 +316,7 @@ fn user_click(
     }
 }
 
-/* TODO: part of broken code above
+// TODO: part of broken code above
 fn text_to_box_coords(n: i32) -> i32 {
     if (n < 0 || n > 35) {
         return -1;
@@ -321,7 +327,6 @@ fn text_to_box_coords(n: i32) -> i32 {
     ];
     return nums[n as usize];
 }
-*/
 
 fn get_clue(index: i32) -> &'static str {
     // https://docs.google.com/document/d/1JXFZT8TP8WhSkEa_iMHrfNA1zcW5KImH34A5IyVG3NU/edit?usp=sharing
