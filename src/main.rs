@@ -78,7 +78,7 @@ fn setup(
     // Make the title
     let title = gen_text(
         "MARIO JEOPARDY",
-        Vec2::new(window.width() / 2., y_values[0]),
+        Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.), // arbitrary subtractions for positioning: BAD
         asset_server.load("korinan.ttf"),
         100.0,
         Color::YELLOW,
@@ -87,21 +87,27 @@ fn setup(
 
     // Make the categories
     let categories: Vec<&str> = vec![
-        "Game Worlds",
-        "Enemies",
-        "Before & After",
-        "Koopa the Quick",
-        "Technical Junk",
-        "Historical Facts",
+        "Game\nWorlds",
+        "Classic\nEnemies",
+        "Before\n& After",
+        "Koopa\nthe Quick",
+        "Technical\nJunk",
+        "Historical\nFacts",
     ];
 
     let mut index: usize = 0;
     for category in &categories {
-        let x: f32 = x_values[index];
+        let mut x: f32 = x_values[index];
         let y: f32 = y_values[1];
+        match index {
+            // arbitrary addition for positioning: BAD
+            0 | 2 => x += 20.,
+            1 => x += 10.,
+            _ => (),
+        }
         let cat: TextBundle = gen_text(
             category,
-            Vec2::new(x, y),
+            Vec2::new(x - 125., y - 50.), // arbitrary subtractions for positioning: BAD
             asset_server.load("korinan.ttf"),
             50.,
             Color::WHITE,
@@ -119,7 +125,7 @@ fn setup(
             let text = format!("${}", amount);
             let a: TextBundle = gen_text(
                 &text.to_string(),
-                Vec2::new(x, y),
+                Vec2::new(x - 85., y - 20.), // arbitrary subtractions for positioning: BAD
                 asset_server.load("korinan.ttf"),
                 50.,
                 Color::ORANGE,
@@ -157,10 +163,12 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
     return TextBundle {
         style: Style {
             align_self: AlignSelf::Center,
+            align_content: AlignContent::Center,
+            justify_content: JustifyContent::Center,
             position_type: PositionType::Absolute,
             position: Rect {
-                bottom: Val::Px(pos.y - (size / 2.)), //Val::Px(5.0),
-                right: Val::Px(pos.x - ((s.len() as f32 * (size / 2.)) / 2.)), //Val::Px(15.0),
+                bottom: Val::Px(pos.y), // - (size / 2.)), //Val::Px(5.0),
+                right: Val::Px(pos.x), // - ((s.len() as f32 * (size / 2.)) / 2.)), //Val::Px(15.0),
                 ..Default::default()
             },
             ..Default::default()
@@ -262,7 +270,10 @@ fn user_click(
                     let clue_text: &str = get_clue(i);
                     let clue: TextBundle = gen_text(
                         clue_text,
-                        Vec2::new(2000. /*win.width() / 2.*/, (win.height() / 2.) - 100.),
+                        Vec2::new(
+                            (win.width() / 2.) - 350.,
+                            ((win.height() / 2.) - 80.) - 125.,
+                        ), // arbitrary subtractions for positioning: BAD
                         asset_server.load("korinan.ttf"),
                         50.,
                         Color::WHITE,
@@ -311,41 +322,41 @@ fn get_clue(index: i32) -> &'static str {
     // https://docs.google.com/document/d/1JXFZT8TP8WhSkEa_iMHrfNA1zcW5KImH34A5IyVG3NU/edit?usp=sharing
     let mut clues: [&str; 36] = [
         "<<<Historical Facts>>>",
-        "Mario’s original name from his\ndebut in the arcade game\nDonkey Kong.",
-        "This game introduces Yoshi as\na character.",
-        "This Nintendo console featured the\nfirst entry in the Mario\nKart series.",
-        "The creator of Mario.",
-        "Super Mario Bros. was released on\nthis year for the Nintendo\nEntertainment System (NES).",
+        "Mario’s original name from his\ndebut in the arcade game\nDonkey Kong.\n \n \n \n ",
+        "This game introduces Yoshi as\na character.\n \n \n \n \n ",
+        "This Nintendo console featured the\nfirst entry in the Mario\nKart series.\n \n \n \n ",
+        "The creator of Mario.\n \n \n \n \n \n ",
+        "Super Mario Bros. was released on\nthis year for the Nintendo\nEntertainment System (NES).\n \n \n \n ",
         "<<<Technical Junk>>>",
-        "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).",
-        "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.",
-        "The Nintendo GameCube was named after\nthis animal during its\ndevelopment at Nintendo. This\ncan be seen in reference in its components,\nand is also the namesake\nof the popular GameCube and Wii Emulator.",
-        "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.",
-        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario\nKart to simulate 3D long before 3D became\na truly viable option.",
+        "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).\n \n \n ",
+        "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.\n \n \n ",
+        "The Nintendo GameCube was named\nafter this animal during its\ndevelopment at Nintendo. This\ncan be seen in reference in its\ncomponents, and is also the namesake\nof the popular GameCube and Wii\nEmulator.\n ",
+        "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.\n \n \n ",
+        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario Kart to\nsimulate 3D long before 3D became\na truly viable option.\n \n \n ",
         "<<<Koopa the Quick>>>",
-        "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.",
-        "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.",
-        "The fastest character for speedrunning\nin Super Mario Galaxy. Also a\nslippery and silly individual.",
-        "This category of Super Mario Odyssey\nspeedrunning involves runners\nattempting to capture enemies as\nlittle as physically possible. It\nis also a generic speedrunning\ncategory used in many different games.",
-        "This speedrunner is the current world\nrecord holder for the “120 Star”\ncategory on speedrun.com.",
+        "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.\n \n \n ",
+        "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.\n ",
+        "The fastest character for speedrunning\nin Super Mario Galaxy. Also a\nslippery and silly individual.\n \n \n \n ",
+        "This category of Super Mario Odyssey\nspeedrunning involves runners\nattempting to capture enemies as\nlittle as physically possible. It\nis also a generic speedrunning\ncategory used in many different games.\n ",
+        "This speedrunner is the current world\nrecord holder for the “120 Star”\ncategory on speedrun.com.\n \n \n \n ",
         "<<<BEFORE & AFTER>>>",
-        "Bowser’s royal name, followed by a\nstandard shelled enemy.",
-        "The title of the original Mario\ngame for the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.",
-        "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.",
-        "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.",
-        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular\nSpongebob Squarepants 3D platformer game\n(recently remade for current\nera consoles).",
+        "Bowser’s royal name, followed by a\nstandard shelled enemy.\n \n \n \n \n ",
+        "The title of the original Mario game\nfor the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.\n \n \n ",
+        "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.\n \n \n ",
+        "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.\n \n \n \n ",
+        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular\nSpongebob Squarepants 3D platformer game\n(recently remade for current\nera consoles).\n ",
         "<<<ENEMIES>>>",
-        "This the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.",
-        "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.",
-        "Famous for being shy around any hero,\nthis enemy typically cannot be\nkilled by traditional means.",
-        "This magician often flies around and\ncauses mischief for the heroes.\nHe is also frequently portrayed\nas a right hand man to Bowser himself.",
-        "Debuting in Super Mario 64 but being\nseen in many future games, this\nunderwater creature is famous for\nscaring children and poking its long\nhead out of holes in the wall.",
+        "This the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.\n \n \n ",
+        "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.\n \n \n ",
+        "Famous for being shy around any hero,\nthis enemy typically cannot be\nkilled by traditional means.\n \n \n \n ",
+        "This magician often flies around and\ncauses mischief for the heroes.\nHe is also frequently portrayed\nas a right hand man to Bowser himself.\n \n \n ",
+        "Debuting in Super Mario 64 but being\nseen in many future games, this\nunderwater creature is famous for\nscaring children and poking its long\nhead out of holes in the wall.\n \n ",
         "<<<GAME WORLDS>>>",
-        "Vast in size and sub-areas, this Super\nMario Odyssey world features a\npyramid that floats into the air.",
-        "This hub world in Super Mario Sunshine\nfeatures a tropical paradise\nwith lively natives.",
-        "There are this many worlds in the\nfirst Mario game for the Nintendo\nEntertainment System.",
-        "This world is the first one\naccessible in Super Mario Galaxy.",
-        "This world in Super Mario 64 was\nso beloved that it was recreated\nin Super Mario Galaxy 2. It also features\na rather tall and skinny boss.",
+        "Vast in size and sub-areas, this Super\nMario Odyssey world features a\npyramid that floats into the air.\n \n \n \n ",
+        "This hub world in Super Mario Sunshine\nfeatures a tropical paradise\nwith lively natives.\n \n \n \n ",
+        "There are this many worlds in the\nfirst Mario game for the Nintendo\nEntertainment System.\n \n \n \n ",
+        "This world is the first one\naccessible in Super Mario Galaxy.\n \n \n \n \n ",
+        "This world in Super Mario 64 was\nso beloved that it was recreated\nin Super Mario Galaxy 2. It also features\na rather tall and skinny boss.\n \n \n ",
     ];
     //println!("{}", clues[index as usize]);
     return clues[index as usize];
