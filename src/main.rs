@@ -194,7 +194,7 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
 fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
-    mut box_query: Query<(Entity, &Transform, &Sprite, With<BoxObj>)>,
+    mut box_query: Query<(Entity, &mut Transform, &Sprite, With<BoxObj>)>,
     mut text_query: Query<(Entity, &mut Style, With<TextObj>)>,
     mut clue_box_query: Query<(Entity, With<ClueBox>)>,
     mut clue_text_query: Query<(Entity, With<ClueText>)>,
@@ -236,7 +236,7 @@ fn user_click(
             );
             //println!("{}, {}", mouse_pos.x, mouse_pos.y);
             let mut i: i32 = 0;
-            for (box_entity, box_tf, box_sprite, _) in box_query.iter_mut() {
+            for (box_entity, mut box_tf, box_sprite, _) in box_query.iter_mut() {
                 //println!("Box: {}", box_tf.translation);
                 if ((i % 6) != 0
                     && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
@@ -244,7 +244,12 @@ fn user_click(
                     && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
                     && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
                 {
+                    /* OLD NORMAL DISAPPEAR: WORRIED ABOUT ITERATION AFTER
                     commands.entity(box_entity).despawn();
+                    */
+
+                    box_tf.translation = Vec3::new(9000., 9000., 15.);
+
                     /* TODO: this just doesn't work as wanted
                     let mut j: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
@@ -258,11 +263,11 @@ fn user_click(
                     */
                     let mut clue_box = SpriteBundle {
                         material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(800., 600.)),
+                        sprite: Sprite::new(Vec2::new(800., 320.)),
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
-                        translation: Vec3::new(0., -100., 15.),
+                        translation: Vec3::new(0., -10., 15.),
                         ..Default::default()
                     };
                     commands.spawn_bundle(clue_box).insert(ClueBox);
@@ -330,9 +335,9 @@ fn get_clue(index: i32) -> &'static str {
         "<<<Technical Junk>>>",
         "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).\n \n \n ",
         "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.\n \n \n ",
-        "The Nintendo GameCube was named\nafter this animal during its\ndevelopment at Nintendo. This\ncan be seen in reference in its\ncomponents, and is also the namesake\nof the popular GameCube and Wii\nEmulator.\n ",
+        "The GameCube was named after this\nanimal during its development at\nNintendo. This name is printed\non components, and is also the\nname of a popular emulator.\n \n ",
         "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.\n \n \n ",
-        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario Kart to\nsimulate 3D long before 3D became\na truly viable option.\n \n \n ",
+        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario Kart to\nsimulate 3D long before 3D became\na truly viable option.\n \n ",
         "<<<Koopa the Quick>>>",
         "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.\n \n \n ",
         "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.\n ",
@@ -344,7 +349,7 @@ fn get_clue(index: i32) -> &'static str {
         "The title of the original Mario game\nfor the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.\n \n \n ",
         "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.\n \n \n ",
         "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.\n \n \n \n ",
-        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular\nSpongebob Squarepants 3D platformer game\n(recently remade for current\nera consoles).\n ",
+        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular Spongebob\nSquarepants 3D platformer game\n(recently remade for current\nera consoles).\n ",
         "<<<ENEMIES>>>",
         "This the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.\n \n \n ",
         "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.\n \n \n ",
