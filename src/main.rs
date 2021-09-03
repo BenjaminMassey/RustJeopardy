@@ -87,12 +87,12 @@ fn setup(
 
     // Make the categories
     let categories: Vec<&str> = vec![
-        "Category 1",
-        "Category 2",
-        "Category 3",
-        "Category 4",
-        "Category 5",
-        "Category 6",
+        "Game Worlds",
+        "Enemies",
+        "Before & After",
+        "Koopa the Quick",
+        "Technical Junk",
+        "Historical Facts",
     ];
 
     let mut index: usize = 0;
@@ -250,11 +250,11 @@ fn user_click(
                     */
                     let mut clue_box = SpriteBundle {
                         material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(600., 400.)),
+                        sprite: Sprite::new(Vec2::new(800., 600.)),
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
-                        translation: Vec3::new(0., 0., 15.),
+                        translation: Vec3::new(0., -100., 15.),
                         ..Default::default()
                     };
                     commands.spawn_bundle(clue_box).insert(ClueBox);
@@ -262,9 +262,9 @@ fn user_click(
                     let clue_text: &str = get_clue(i);
                     let clue: TextBundle = gen_text(
                         clue_text,
-                        Vec2::new(win.width() / 2., win.height() / 2.),
+                        Vec2::new(2000. /*win.width() / 2.*/, (win.height() / 2.) - 100.),
                         asset_server.load("korinan.ttf"),
-                        200.,
+                        50.,
                         Color::WHITE,
                     );
                     commands.spawn_bundle(clue).insert(ClueText);
@@ -308,43 +308,44 @@ fn text_to_box_coords(n: i32) -> i32 {
 */
 
 fn get_clue(index: i32) -> &'static str {
+    // https://docs.google.com/document/d/1JXFZT8TP8WhSkEa_iMHrfNA1zcW5KImH34A5IyVG3NU/edit?usp=sharing
     let mut clues: [&str; 36] = [
-        "CATEGORY 6",
-        "C6 1",
-        "C6 2",
-        "C6 3",
-        "C6 4",
-        "C6 5",
-        "CATEGORY 5",
-        "C5 1",
-        "C5 2",
-        "C5 3",
-        "C5 4",
-        "C5 5",
-        "CATEGORY 4",
-        "C4 1",
-        "C4 2",
-        "C4 3",
-        "C4 4",
-        "C4 5",
-        "CATEGORY 3",
-        "C3 1",
-        "C3 2",
-        "C3 3",
-        "C3 4",
-        "C3 5",
-        "CATEGORY 2",
-        "C2 1",
-        "C2 2",
-        "C2 3",
-        "C2 4",
-        "C2 5",
-        "CATEGORY 1",
-        "C1 1",
-        "C1 2",
-        "C1 3",
-        "C1 4",
-        "C1 5",
+        "<<<Historical Facts>>>",
+        "Mario’s original name from his\ndebut in the arcade game\nDonkey Kong.",
+        "This game introduces Yoshi as\na character.",
+        "This Nintendo console featured the\nfirst entry in the Mario\nKart series.",
+        "The creator of Mario.",
+        "Super Mario Bros. was released on\nthis year for the Nintendo\nEntertainment System (NES).",
+        "<<<Technical Junk>>>",
+        "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).",
+        "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.",
+        "The Nintendo GameCube was named after\nthis animal during its\ndevelopment at Nintendo. This\ncan be seen in reference in its components,\nand is also the namesake\nof the popular GameCube and Wii Emulator.",
+        "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.",
+        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario\nKart to simulate 3D long before 3D became\na truly viable option.",
+        "<<<Koopa the Quick>>>",
+        "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.",
+        "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.",
+        "The fastest character for speedrunning\nin Super Mario Galaxy. Also a\nslippery and silly individual.",
+        "This category of Super Mario Odyssey\nspeedrunning involves runners\nattempting to capture enemies as\nlittle as physically possible. It\nis also a generic speedrunning\ncategory used in many different games.",
+        "This speedrunner is the current world\nrecord holder for the “120 Star”\ncategory on speedrun.com.",
+        "<<<BEFORE & AFTER>>>",
+        "Bowser’s royal name, followed by a\nstandard shelled enemy.",
+        "The title of the original Mario\ngame for the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.",
+        "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.",
+        "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.",
+        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular\nSpongebob Squarepants 3D platformer game\n(recently remade for current\nera consoles).",
+        "<<<ENEMIES>>>",
+        "This the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.",
+        "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.",
+        "Famous for being shy around any hero,\nthis enemy typically cannot be\nkilled by traditional means.",
+        "This magician often flies around and\ncauses mischief for the heroes.\nHe is also frequently portrayed\nas a right hand man to Bowser himself.",
+        "Debuting in Super Mario 64 but being\nseen in many future games, this\nunderwater creature is famous for\nscaring children and poking its long\nhead out of holes in the wall.",
+        "<<<GAME WORLDS>>>",
+        "Vast in size and sub-areas, this Super\nMario Odyssey world features a\npyramid that floats into the air.",
+        "This hub world in Super Mario Sunshine\nfeatures a tropical paradise\nwith lively natives.",
+        "There are this many worlds in the\nfirst Mario game for the Nintendo\nEntertainment System.",
+        "This world is the first one\naccessible in Super Mario Galaxy.",
+        "This world in Super Mario 64 was\nso beloved that it was recreated\nin Super Mario Galaxy 2. It also features\na rather tall and skinny boss.",
     ];
     //println!("{}", clues[index as usize]);
     return clues[index as usize];
