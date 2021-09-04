@@ -144,8 +144,6 @@ fn setup(
     for i in 0..6 {
         for j in 1..7 {
             let mut new_box: SpriteBundle = blue_box.clone();
-
-            //println!("{}", (window.width() / 2.));
             new_box.transform = Transform {
                 translation: Vec3::new(
                     x_values[i] - (window.width() / 1.9), // idk why 1.9, just seems to work
@@ -244,17 +242,14 @@ fn user_click(
                     && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
                     && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
                 {
-                    /* OLD NORMAL DISAPPEAR: WORRIED ABOUT ITERATION AFTER
-                    commands.entity(box_entity).despawn();
-                    */
-
+                    // Move out of way rather than despawn because of future iteration
                     box_tf.translation = Vec3::new(9000., 9000., 15.);
 
-                    // TODO: this just doesn't work as wanted
                     let mut j: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
                         //println!("j{}", j);
                         if (i == text_to_box_coords(j - 1)) {
+                            // Move out of way rather than despawn because of future iteration
                             let new_bottom: Val = text_style.position.bottom + 5000.;
                             let new_right: Val = text_style.position.right + 5000.;
                             text_style.position = Rect {
@@ -293,7 +288,7 @@ fn user_click(
                     let mut text_iter: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
                         if (text_iter < 7) {
-                            // To keep categories + title unmoved
+                            // To keep categories + title unmoved: genuinely optional, but I like it
                             text_iter += 1;
                             continue;
                         }
@@ -316,7 +311,6 @@ fn user_click(
     }
 }
 
-// TODO: part of broken code above
 fn text_to_box_coords(n: i32) -> i32 {
     if (n < 0 || n > 35) {
         return -1;
