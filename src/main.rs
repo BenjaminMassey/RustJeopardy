@@ -220,7 +220,7 @@ fn user_click(
 
                     for (j, (_, mut text_style, _)) in text_query.iter_mut().enumerate() {
                         //println!("j{}", j);
-                        if i == text_to_box_coords(j as i32 - 1) {
+                        if Some(i) == text_to_box_coords(j as i32 - 1) {
                             // Move out of way rather than despawn because of future iteration
                             let new_bottom: Val = text_style.position.bottom + 5000.;
                             let new_right: Val = text_style.position.right + 5000.;
@@ -283,7 +283,10 @@ fn user_click(
     }
 }
 
-fn text_to_box_coords(n: i32) -> i32 {
-    assert!((0..=35).contains(&n));
-    6 * (5 - n % 6) + n / 6
+fn text_to_box_coords(n: i32) -> Option<i32> {
+    if (0..=35).contains(&n) {
+        Some(6 * (5 - n % 6) + n / 6)
+    } else {
+        None
+    }
 }
