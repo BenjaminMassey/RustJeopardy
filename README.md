@@ -1,13 +1,21 @@
-# Rust Jeopardy
+# Rust Quiz
 
 ## About
 
-This is a barebones application with the funcitonality of a standard Jeopardy-style game.
+This codebase a barebones application to run a quiz game in
+a style inspired by the trademarked game *Jeopardy!*.
 
-It was made for a "Mario Jeopardy" usage, and so features data to this extent, but should be
-written in a modifiable way such that one can use their own text data.
+This is an independently-developed game environment created
+without the knowledge or permission of *Jeopardy!*
+Productions. The supplied quiz game is "Mario" trivia based
+on the Nintendo character, but is again an
+independently-developed quiz created without the knowledge
+or permission of Nintendo, Inc.
 
-This is written in Rust, using the Bevy engine.
+The code is structured such that one can easily replace the
+quiz text in the application
+
+This game framework is written in Rust, using the Bevy engine.
 
 ## Screenshots
 
@@ -19,13 +27,16 @@ This is written in Rust, using the Bevy engine.
 
 ## Usage
 
-This is a rather basic Rust setup, so usage should be straight-forward.
+This is a rather basic Rust setup, so usage should be straightforward.
 
-I will note for those looking at the code that this is my first Rust application, so if anything
-seems off or strange then it probably just is.
+This is my first Rust application, so if anything seems off
+or strange then it probably just is: issue reports and
+patches are welcome.
 
-This was written with version 1.54.0 installed, and should be able to be run standardly with "cargo run".
+This was written with version 1.54.0 installed, and should
+be able to be run via `cargo run`.
 
 ## Contact
 
-Feel free to contact me at benjamin.w.massey@gmail.com with any questions / inquiries.
+Feel free to contact me at benjamin.w.massey@gmail.com with
+any questions or inquiries.
