@@ -1,14 +1,16 @@
+mod quiz;
+use quiz::*;
+
 use bevy::prelude::*;
 
 struct TextObj;
 struct BoxObj;
 struct ClueBox;
-
 struct ClueText;
-
 struct ReadingClue(bool);
 
 fn main() {
+    let quiz = Quiz::new("assets/quiz.xml").unwrap();
     App::build()
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WindowDescriptor {
@@ -18,6 +20,7 @@ fn main() {
             ..Default::default()
         })
         .insert_resource(ReadingClue(false))
+        .insert_resource(quiz)
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
         .add_system(user_click.system())
@@ -27,6 +30,7 @@ fn main() {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    quiz: Res<Quiz>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut windows: ResMut<Windows>,
 ) {
@@ -37,9 +41,6 @@ fn setup(
     // Cameras
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
-
-    // Font
-    //let mut main_font: Handle<Font> = asset_server.load("korinan.ttf");
 
     // Set up coordinate values
     let mut x_values: Vec<f32> = vec![0., 0., 0., 0., 0., 0.];
@@ -58,7 +59,7 @@ fn setup(
 
     // Make the title
     let title = gen_text(
-        "MARIO JEOPARDY",
+        (&quiz.name).as_deref().unwrap_or("Quiz!"),
         // arbitrary subtractions for positioning: BAD
         Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.),
         asset_server.load("korinan.ttf"),
@@ -67,17 +68,7 @@ fn setup(
     );
     commands.spawn_bundle(title).insert(TextObj);
 
-    // Make the categories
-    let categories: Vec<&str> = vec![
-        "Game\nWorlds",
-        "Classic\nEnemies",
-        "Before\n& After",
-        "Koopa\nthe Quick",
-        "Technical\nJunk",
-        "Historical\nFacts",
-    ];
-
-    for (index, category) in categories.iter().enumerate() {
+    for (index, category) in quiz.category.iter().enumerate() {
         let mut x: f32 = x_values[index];
         let y: f32 = y_values[1];
         match index {
@@ -87,7 +78,7 @@ fn setup(
             _ => (),
         }
         let cat: TextBundle = gen_text(
-            category,
+            &category.name,
             // arbitrary subtractions for positioning: BAD
             Vec2::new(x - 125., y - 50.),
             asset_server.load("korinan.ttf"),
@@ -179,6 +170,7 @@ fn user_click(
     mut clue_text_query: Query<(Entity, With<ClueText>)>,
     windows: Res<Windows>,
     asset_server: Res<AssetServer>,
+    quiz: Res<Quiz>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut reading: ResMut<ReadingClue>,
 ) {
@@ -193,7 +185,7 @@ fn user_click(
             let mut text_iter: i32 = 0;
             for (_, mut text_style, _) in text_query.iter_mut() {
                 if text_iter < 7 {
-                    // To keep categories + title unmoved
+                    // To keep category + title unmoved
                     text_iter += 1;
                     continue;
                 }
@@ -252,9 +244,9 @@ fn user_click(
                     };
                     commands.spawn_bundle(clue_box).insert(ClueBox);
 
-                    let clue_text: &str = get_clue(i);
+                    let clue_text: &str = quiz.get_clue(i as usize);
                     let clue: TextBundle = gen_text(
-                        clue_text,
+                        &clue_text,
                         Vec2::new(
                             (win.width() / 2.) - 350.,
                             ((win.height() / 2.) - 80.) - 125.,
@@ -267,7 +259,7 @@ fn user_click(
                     let mut text_iter: i32 = 0;
                     for (_, mut text_style, _) in text_query.iter_mut() {
                         if text_iter < 7 {
-                            // To keep categories + title unmoved:
+                            // To keep category + title unmoved:
                             // genuinely optional, but I like it
                             text_iter += 1;
                             continue;
@@ -294,48 +286,4 @@ fn user_click(
 fn text_to_box_coords(n: i32) -> i32 {
     assert!((0..=35).contains(&n));
     6 * (5 - n % 6) + n / 6
-}
-
-fn get_clue(index: i32) -> &'static str {
-    // https://docs.google.com/document/d/1JXFZT8TP8WhSkEa_iMHrfNA1zcW5KImH34A5IyVG3NU/edit?usp=sharing
-    let clues: [&str; 36] = [
-        "<<<Historical Facts>>>",
-        "Mario’s original name from his    \ndebut in the arcade game\nDonkey Kong.\n \n \n \n ",
-        "This game introduces Yoshi        \nas a character.\n \n \n \n \n ",
-        "This Nintendo console featured the\nfirst entry in the Mario\nKart series.\n \n \n \n ",
-        "The creator of Mario.             \n \n \n \n \n \n ",
-        "Super Mario Bros. was released on \nthis year for the Nintendo\nEntertainment System (NES).\n \n \n \n ",
-        "<<<Technical Junk>>>",
-        "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).\n \n \n ",
-        "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.\n \n \n ",
-        "The GameCube was named after this\nanimal during its development at\nNintendo. This name is printed\non components, and is also the\nname of a popular emulator.\n \n ",
-        "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.\n \n \n ",
-        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario Kart to\nsimulate 3D long before 3D became\na truly viable option.\n \n ",
-        "<<<Koopa the Quick>>>",
-        "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.\n \n \n ",
-        "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.\n ",
-        "The fastest character for speedrunning\nin Super Mario Galaxy. Also a\nslippery and silly individual.\n \n \n \n ",
-        "This category of Super Mario Odyssey\nspeedrunning involves runners\nattempting to capture enemies as\nlittle as physically possible. It\nis also a generic speedrunning\ncategory used in many different games.\n ",
-        "This speedrunner is the current world\nrecord holder for the “120 Star”\ncategory on speedrun.com.\n \n \n \n ",
-        "<<<BEFORE & AFTER>>>",
-        "Bowser’s royal name, followed by a\nstandard shelled enemy.\n \n \n \n \n ",
-        "The title of the original Mario game\nfor the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.\n \n \n ",
-        "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.\n \n \n ",
-        "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.\n \n \n \n ",
-        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular Spongebob\nSquarepants 3D platformer game\n(recently remade for current\nera consoles).\n ",
-        "<<<ENEMIES>>>",
-        "This is the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.\n \n \n ",
-        "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.\n \n \n ",
-        "Famous for being shy around any hero,\nthis enemy typically cannot be\nkilled by traditional means.\n \n \n \n ",
-        "This magician often flies around and\ncauses mischief for the heroes.\nHe is also frequently portrayed\nas a right hand man to Bowser himself.\n \n \n ",
-        "Debuting in Super Mario 64 but being\nseen in many future games, this\nunderwater creature is famous for\nscaring children and poking its long\nhead out of holes in the wall.\n \n ",
-        "<<<GAME WORLDS>>>",
-        "Vast in size and sub-areas, this Super\nMario Odyssey world features a\npyramid that floats into the air.\n \n \n \n ",
-        "This hub world in Super Mario Sunshine\nfeatures a tropical paradise\nwith lively natives.\n \n \n \n ",
-        "There are this many worlds in the\nfirst Mario game for the Nintendo\nEntertainment System.\n \n \n \n ",
-        "This world is the first one\naccessible in Super Mario Galaxy.\n \n \n \n \n ",
-        "This world in Super Mario 64 was\nso beloved that it was recreated\nin Super Mario Galaxy 2. It also features\na rather tall and skinny boss.\n \n \n ",
-    ];
-    //println!("{}", clues[index as usize]);
-    clues[index as usize]
 }
