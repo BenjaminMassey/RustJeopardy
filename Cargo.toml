@@ -1,10 +1,12 @@
 [package]
-name = "jeopardy"
+name = "rust-quiz"
 version = "0.1.0"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Benjamin Massey"]
 
 [dependencies]
 bevy = "0.5"
 rand = "0.6"
+string-error = "0.1.0"
+yaserde = "0.7.1"
+yaserde_derive = "0.7.1"
