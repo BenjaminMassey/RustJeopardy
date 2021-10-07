@@ -37,7 +37,6 @@ impl Quiz {
     }
 
     pub fn get_clue(&self, index: usize) -> &str {
-        &self.category[index / 7].clue[index % 6].text
+        &self.category[index / 7].clue[index % 6 - 1].text
     }
 }
-
