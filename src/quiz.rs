@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use string_error;
+use string_error::into_err;
 use yaserde::de;
 use yaserde_derive::YaDeserialize;
 
@@ -31,9 +31,7 @@ pub struct Clue {
 impl Quiz {
     pub fn new(quiz_path: impl AsRef<std::path::Path>) -> Result<Self, Box<dyn Error>> {
         let quiz_file = std::fs::File::open(quiz_path)?;
-        de::from_reader::<_, Quiz>(quiz_file).or_else(
-            |s| Err(string_error::into_err(s))
-        )
+        de::from_reader::<_, Quiz>(quiz_file).map_err(into_err)
     }
 
     pub fn get_clue(&self, index: usize) -> &str {

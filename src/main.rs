@@ -246,7 +246,7 @@ fn user_click(
 
                     let clue_text: &str = quiz.get_clue(i as usize);
                     let clue: TextBundle = gen_text(
-                        &clue_text,
+                        clue_text,
                         Vec2::new(
                             (win.width() / 2.) - 350.,
                             ((win.height() / 2.) - 80.) - 125.,
