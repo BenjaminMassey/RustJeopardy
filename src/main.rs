@@ -59,7 +59,8 @@ fn setup(
     // Make the title
     let title = gen_text(
         "MARIO JEOPARDY",
-        Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.), // arbitrary subtractions for positioning: BAD
+        // arbitrary subtractions for positioning: BAD
+        Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.),
         asset_server.load("korinan.ttf"),
         100.0,
         Color::YELLOW,
@@ -87,7 +88,8 @@ fn setup(
         }
         let cat: TextBundle = gen_text(
             category,
-            Vec2::new(x - 125., y - 50.), // arbitrary subtractions for positioning: BAD
+            // arbitrary subtractions for positioning: BAD
+            Vec2::new(x - 125., y - 50.),
             asset_server.load("korinan.ttf"),
             50.,
             Color::WHITE,
@@ -103,7 +105,8 @@ fn setup(
             let text = format!("${}", amount);
             let a: TextBundle = gen_text(
                 &text.to_string(),
-                Vec2::new(x - 85., y - 20.), // arbitrary subtractions for positioning: BAD
+                // arbitrary subtractions for positioning: BAD
+                Vec2::new(x - 85., y - 20.),
                 asset_server.load("korinan.ttf"),
                 50.,
                 Color::ORANGE,
@@ -143,8 +146,8 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, font_size: f32, color: Color
             justify_content: JustifyContent::Center,
             position_type: PositionType::Absolute,
             position: Rect {
-                bottom: Val::Px(pos.y), // - (size / 2.)), //Val::Px(5.0),
-                right: Val::Px(pos.x), // - ((s.len() as f32 * (size / 2.)) / 2.)), //Val::Px(15.0),
+                bottom: Val::Px(pos.y),
+                right: Val::Px(pos.x),
                 ..Default::default()
             },
             ..Default::default()
@@ -264,7 +267,8 @@ fn user_click(
                     let mut text_iter: i32 = 0;
                     for (_, mut text_style, _) in text_query.iter_mut() {
                         if text_iter < 7 {
-                            // To keep categories + title unmoved: genuinely optional, but I like it
+                            // To keep categories + title unmoved:
+                            // genuinely optional, but I like it
                             text_iter += 1;
                             continue;
                         }
@@ -292,8 +296,12 @@ fn text_to_box_coords(n: i32) -> i32 {
         return -1;
     };
     let nums: [i32; 36] = [
-        30, 24, 18, 12, 6, 0, 31, 25, 19, 13, 7, 1, 32, 26, 20, 14, 8, 2, 33, 27, 21, 15, 9, 3, 34,
-        28, 22, 16, 10, 4, 35, 29, 23, 17, 11, 5,
+        30, 24, 18, 12, 6, 0,
+        31, 25, 19, 13, 7, 1,
+        32, 26, 20, 14, 8, 2,
+        33, 27, 21, 15, 9, 3,
+        34, 28, 22, 16, 10, 4,
+        35, 29, 23, 17, 11, 5,
     ];
     nums[n as usize]
 }
