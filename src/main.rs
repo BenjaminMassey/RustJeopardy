@@ -28,8 +28,8 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WindowDescriptor {
             title: "Jeopardy".to_string(),
-            width: 1800.0,
-            height: 1012.0,
+            width: 1422.0,
+            height: 800.0,
             ..Default::default()
         })
         .insert_resource(ReadingClue(false))
@@ -77,7 +77,7 @@ fn setup(
 
     // Make the title
     let title = gen_text(
-        "MARIO JEOPARDY",
+        "GHIBLI JEOPARDY",
         Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.), // arbitrary subtractions for positioning: BAD
         asset_server.load("korinan.ttf"),
         100.0,
@@ -87,12 +87,12 @@ fn setup(
 
     // Make the categories
     let categories: Vec<&str> = vec![
-        "Game\nWorlds",
-        "Classic\nEnemies",
-        "Before\n& After",
-        "Koopa\nthe Quick",
-        "Technical\nJunk",
-        "Historical\nFacts",
+        "General\nMovies",
+        "Humans\n(Mostly)",
+        "Creatures\n& Animals",
+        "Historical\nKnowledge",
+        "Scary\nVillains",
+        "Random\n& Misc",
     ];
 
     let mut index: usize = 0;
@@ -137,7 +137,8 @@ fn setup(
 
     let blue_box: SpriteBundle = SpriteBundle {
         material: materials.add((Color::BLUE).into()),
-        sprite: Sprite::new(Vec2::new(250., 125.)),
+        sprite: Sprite::new(Vec2::new(225., 100.)),
+        //sprite: Sprite::new(Vec2::new(250., 125.)),
         ..Default::default()
     };
 
@@ -211,8 +212,15 @@ fn user_click(
             }
             let mut text_iter: i32 = 0;
             for (text_entity, mut text_style, _) in text_query.iter_mut() {
+                /*
                 if (text_iter < 7) {
                     // To keep categories + title unmoved
+                    text_iter += 1;
+                    continue;
+                }
+                */
+                if (text_iter == 0) {
+                    // To keep title at top, optional as well
                     text_iter += 1;
                     continue;
                 }
@@ -264,7 +272,7 @@ fn user_click(
 
                     let mut clue_box = SpriteBundle {
                         material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(800., 320.)),
+                        sprite: Sprite::new(Vec2::new(1200., 620.)),
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
@@ -287,8 +295,15 @@ fn user_click(
                     commands.spawn_bundle(clue).insert(ClueText);
                     let mut text_iter: i32 = 0;
                     for (text_entity, mut text_style, _) in text_query.iter_mut() {
+                        /*
                         if (text_iter < 7) {
                             // To keep categories + title unmoved: genuinely optional, but I like it
+                            text_iter += 1;
+                            continue;
+                        }
+                        */
+                        if (text_iter == 0) {
+                            // To keep title at top, optional as well
                             text_iter += 1;
                             continue;
                         }
@@ -322,46 +337,48 @@ fn text_to_box_coords(n: i32) -> i32 {
     return nums[n as usize];
 }
 
+
+// Categories are reversed: pay close attention to categories
 fn get_clue(index: i32) -> &'static str {
-    // https://docs.google.com/document/d/1JXFZT8TP8WhSkEa_iMHrfNA1zcW5KImH34A5IyVG3NU/edit?usp=sharing
+    // https://docs.google.com/document/d/19mHqRAi4TFoegb3A0rNJBlHo1A9bFoo9O-p8CRMd24Q/edit?usp=sharing
     let mut clues: [&str; 36] = [
-        "<<<Historical Facts>>>",
-        "Mario’s original name from his    \ndebut in the arcade game\nDonkey Kong.\n \n \n \n ",
-        "This game introduces Yoshi        \nas a character.\n \n \n \n \n ",
-        "This Nintendo console featured the\nfirst entry in the Mario\nKart series.\n \n \n \n ",
-        "The creator of Mario.             \n \n \n \n \n \n ",
-        "Super Mario Bros. was released on \nthis year for the Nintendo\nEntertainment System (NES).\n \n \n \n ",
-        "<<<Technical Junk>>>",
-        "While the Nintendo 64 gives away\nits amount of bits, this\nis the bit number for the Super\nNintendo (SNES).\n \n \n ",
-        "Super Mario 64 features this gimmick\non startup, which was made\nas a technical demo of the\nNintendo 64’s advanced 3D capabilities.\n \n \n ",
-        "The GameCube was named after this\nanimal during its development at\nNintendo. This name is printed\non components, and is also the\nname of a popular emulator.\n \n ",
-        "In Super Mario 64, this boss character\nshares the same audio\nfile as Bowser, only with a\ndiffering playback speed.\n \n \n ",
-        "This graphical technique for the Super\nNintendo was used by early\ngames like Super Mario Kart to\nsimulate 3D long before 3D became\na truly viable option.\n \n ",
-        "<<<Koopa the Quick>>>",
-        "The game version featuring this\nlanguage is the fastest for\nspeedrunning most speedrun categories\nin Super Mario 64.\n \n \n ",
-        "During the primary boss battles\nin Super Mario 64, the player must\nperform this action on Bowser in\norder to defeat him. It is also a\nfrequent action taken by\nfamous runner Clint Stevens.\n ",
-        "The fastest character for speedrunning\nin Super Mario Galaxy. Also a\nslippery and silly individual.\n \n \n \n ",
-        "This category of Super Mario Odyssey\nspeedrunning involves runners\nattempting to capture enemies as\nlittle as physically possible. It\nis also a generic speedrunning\ncategory used in many different games.\n ",
-        "This speedrunner is the current world\nrecord holder for the “120 Star”\ncategory on speedrun.com.\n \n \n \n ",
-        "<<<BEFORE & AFTER>>>",
-        "Bowser’s royal name, followed by a\nstandard shelled enemy.\n \n \n \n \n ",
-        "The title of the original Mario game\nfor the Nintendo Entertainment System,\nfollowed by a mantra said\namong frat boys.\n \n \n ",
-        "The RPG series title highlighting\nthe iconic plumber duo, followed by the\ngreen partner’s GameCube\ndebut title.\n \n \n ",
-        "An obscure drawing game for the Super\nNintendo, followed by the main tool\nused by Bowser Jr.\n \n \n \n ",
-        "The Nintendo Switch RPG collaboration\nwith the Rayman franchise, followed\nby the most popular Spongebob\nSquarepants 3D platformer game\n(recently remade for current\nera consoles).\n ",
-        "<<<ENEMIES>>>",
-        "This is the most standard ground-based\nenemy in the Mario universe: iconic\nfor being grumpy, brown,\nand armless.\n \n \n ",
-        "A lead villain in Super Mario Sunshine,\nthis character is famous for\ntheir flying vehicle and\ntheir infamous father.\n \n \n ",
-        "Famous for being shy around any hero,\nthis enemy typically cannot be\nkilled by traditional means.\n \n \n \n ",
-        "This magician often flies around and\ncauses mischief for the heroes.\nHe is also frequently portrayed\nas a right hand man to Bowser himself.\n \n \n ",
-        "Debuting in Super Mario 64 but being\nseen in many future games, this\nunderwater creature is famous for\nscaring children and poking its long\nhead out of holes in the wall.\n \n ",
-        "<<<GAME WORLDS>>>",
-        "Vast in size and sub-areas, this Super\nMario Odyssey world features a\npyramid that floats into the air.\n \n \n \n ",
-        "This hub world in Super Mario Sunshine\nfeatures a tropical paradise\nwith lively natives.\n \n \n \n ",
-        "There are this many worlds in the\nfirst Mario game for the Nintendo\nEntertainment System.\n \n \n \n ",
-        "This world is the first one\naccessible in Super Mario Galaxy.\n \n \n \n \n ",
-        "This world in Super Mario 64 was\nso beloved that it was recreated\nin Super Mario Galaxy 2. It also features\na rather tall and skinny boss.\n \n \n ",
+        "<<<Random and Misc>>>",
+        "This “theme park” is set to open\non November 1st, 2022 at Aichi Earth Expo\nMemorial Park in Nagakute, Japan. It notably\nis experience based, and thus features no\nstandard rides.\n \n \n ",
+        "This style of painting is often used\nin early sketches for Ghibli films\nby Hayao Miyazaki, and makes sense considering\nthe kind of art styles that Ghibli\nfilms go for.\n \n \n ",
+        "Miyazaki announced his\nretirement from feature films shortly\nafter the release of this film.\n \n \n ",
+        "This movie is the most recent\nStudio Ghibli venture, which has seen releases\nfrom 2020-2021. It was\na multiple company procedure\n- not just Studio Ghibli - and was directed by\nHayao Miyazaki’s son, Goro. It, rather unfortunately,\nuses 3D animation, and has stellar reviews like\n“With a story as uninspired as its animation, [it is a]\nnear-total—misfire for Studio Ghibli.”",
+        "Disney began a partnership\nwith Studio Ghibli to aid\nin international releases in this year.\n \n \n ",
+        "<<<Scary Villains>>>",
+        "This large, elderly woman is primarily a villain\nbecause of her greed. She has a younger twin sister,\nloves her son Boh, and is the main antagonist\nin Spirited Away.\n \n \n ",
+        "This woman is seen as the secondary\nantagonist to Madame Suliman, since her\nrole becomes more complicated\nafter the start of her story. That being said,\nshe notably curses the main character,\nSophie, to look like an elderly woman:\nbased on the aging magic she uses\non herself to keep her\nlooking young. She stars in Howls Moving Castle.",
+        "The villain in this movie kidnaps the female\nlead, Sheeta, and holds her\ncaptive on an airship. It is\nfound that he is on the search for the kingdom\nof Laputa, which features magic that the\nmain protagonists end up having a connection to.\nThe main protagonist, Pazu, generally\nfoils his schemes.",
+        "This scruffy old fellow kidnaps\nthe main character and transforms her into a cat.\nHe notably has a purple gem on top of his\nhead that looks like a false eye, and his\ntwo real eyes are different colors: red\nand blue. He stars in The Cat Returns.\n \n \n ",
+        "This character is the father of the\nmain and title character, and is more complex \nand misguided than straight evil. He is a researcher,\nlives in an underwater harbor, and has had \nchildren with a sea goddess:\nexplaining key parts of the film.\nHis appearance is markedly whimsical\nand slender. He stars in Ponyo.",
+        "<<<Historical Knowledge>>>",
+        "Despite releasing just before Studio\nGhiblio fficially formed, this movie\nis generally cited as their first\nfilm, since it featured most of\nthe same creators (Hayao Miyazaki as\nthe director, for example), story themes, and art\nstyles found throughout the rest of Ghibli's portfolio.\n \n",
+        "This movie is the first feature film\nofficially released by Studio Ghibli, in spite of\nmany considering it their second film.\n \n \n ",
+        "This was the first movie directed\nby Hayao Miyazaki's son, Goro,\nwhich was famously hated by Hayao,\nand struggled at the box office and\nin reviews more so than\nother Ghibli works.\n \n ",
+        "This Studio Ghibli film\nwas released in 2013.\n \n \n \n ",
+        "This person helped found Studio\nGhibli as co-director with\nHayao Miyazaki, after working with Hayao and\nToshioSuzuki (a producer) at the\nanimation studio Topcraft.\n ",
+        "<<<Creatures and Animals>>>",
+        "This iconic black cat stars alongside\nthe main character witch in Kiki’s Delivery Service.\n \n \n ",
+        "This creature may be the only one that\nis also amode of transportation, and is\nrather anti-American considering its\napproval of public transit. It is\nalso of note that it is felinen\nin nature, which fits the general theme of its\nfilm’s woodland creatures.\n ",
+        "These tiny, black creatures \nare generally seen\ncarrying rocks or gems, and are seen in My\nNeighbor Totoro and Spirited Away.\nThey leave black dust as they walk\naround, and temporarily dissolve when crushed.\n \n \n ",
+        "This lazy dog — inspired by a\nFrench hunting dog breed —\nis owned as the “errand dog”\n by the villain Suliman.\nHe is a character for the film\nHowl’s Moving Castle.\n ",
+        "This pet “Fox Squirrel” was given as\na gift to the main character, who\ngives a little aggression before becoming friends.\nHe stars in Nausicaä of\nthe Valley of the Wind.\n \n \n \n ",
+        "<<<Humans (Mostly)>>>",
+        "This helpful young boy ensures the\nsuccess of the young girl\nprotagonist, but is later revealed\nto have a dragon form. He is a\ncharacter from the film Spirited Away.\n \n \n ",
+        "This young boy saves a goldfish in his seaside town,\nwhich licks his cut finger to prove its mortality.\nHe is also the love interest, and co main character\nwith the film titled character Ponyo.\n \n \n ",
+        "This 10 year old girl stars in My Neighbor Totoro,\nand has a 4 year old sister named Mei.\nShe struggles with her mother who is sick, and is\ntaken on some magical journeys with the movie’s\nwoodland creatures: primarily Totoro.\n \n ",
+        "This young girl stars in The Cat Returns\nas the one taken by the feline prince for\nmarriage in the life of a cat.\n \n \n ",
+        "This 16 year old girl is known as\n“the girl who raises red flags”, based\non the tragic death of her father in the\nKorean war. She lives in Coquelicot Manor, and is\nthe star of From Up on Poppy Hill.\n \n ",
+        "<<<General Movies>>>",
+        "This Ghibli film\nfamously features\na humanoid pig\nas its main character.\n \n \n ",
+        "This Ghibli film stars a young girl\nwho stumbles upon a furry, woodland creature,\nwho helps her in rather magical ways.\n \n \n ",
+        "This Ghibli film has a main location\nof a whimsical bathhouse, despite starting\non a simple car ride and stumbling\nupon a unique market-town.\n \n \n ",
+        "This Ghibli film lands on the more serious\nside of Ghibli films, primarily because\nof it taking place in World War II, and features\nfirebombing, along with children struggling\nto survive on their own. \n ",
+        "This Ghibli film has one of the most obvious\nenvironmentalist messages, features many\nanimal gods such as a boar, a deer,\nand wolves, and stars a warrior princess.\n \n \n ",
     ];
-    //println!("{}", clues[index as usize]);
+    println!("{} => {}", index, clues[index as usize]);
     return clues[index as usize];
 }
