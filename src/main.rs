@@ -6,56 +6,63 @@ use bevy::{
     reflect::TypeData,
     sprite::collide_aabb::collide,
     text,
+    window::{PrimaryWindow, WindowPosition},
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
+#[derive(Resource)]
 struct WinSize {
     w: f32,
     h: f32,
 }
 
-struct TextObj;
+#[derive(Component)]
+/// The box index for board text, or `None` for the title.
+struct TextObj(Option<i32>);
+#[derive(Component)]
 struct BoxObj;
+#[derive(Component)]
 struct ClueBox;
 
+#[derive(Component)]
 struct ClueText;
 
+#[derive(Resource)]
 struct ReadingClue(bool);
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(WindowDescriptor {
-            title: "Jeopardy".to_string(),
-            width: 1422.0,
-            height: 800.0,
-            ..Default::default()
-        })
         .insert_resource(ReadingClue(false))
-        .add_plugins(DefaultPlugins)
-        .add_startup_system(setup.system())
-        .add_system(user_click.system())
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Jeopardy".to_string(),
+                resolution: (1422.0_f32, 800.0_f32).into(),
+                position: WindowPosition::At(IVec2::ZERO),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))
+        .add_startup_system(setup)
+        .add_system(user_click)
         .run();
 }
 
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut windows: ResMut<Windows>,
+    windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     // Window setup
-    let mut window = windows.get_primary_mut().unwrap();
+    let window = windows.single();
     commands.insert_resource(WinSize {
         w: window.width(),
         h: window.height(),
     });
-    window.set_position(IVec2::new(0, 0));
 
-    // Cameras
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    // Camera (renders both sprites and UI)
+    commands.spawn(Camera2dBundle::default());
 
     // Font
     //let mut main_font: Handle<Font> = asset_server.load("korinan.ttf");
@@ -83,7 +90,7 @@ fn setup(
         100.0,
         Color::YELLOW,
     );
-    commands.spawn_bundle(title).insert(TextObj);
+    commands.spawn(title).insert(TextObj(None));
 
     // Make the categories
     let categories: Vec<&str> = vec![
@@ -95,25 +102,43 @@ fn setup(
         "Random\n& Misc",
     ];
 
-    let mut index: usize = 0;
-    for category in &categories {
-        let mut x: f32 = x_values[index];
-        let y: f32 = y_values[1];
-        match index {
-            // arbitrary addition for positioning: BAD
-            0 | 2 => x += 20.,
-            1 => x += 10.,
-            _ => (),
-        }
-        let cat: TextBundle = gen_text(
-            category,
-            Vec2::new(x - 125., y - 50.), // arbitrary subtractions for positioning: BAD
-            asset_server.load("korinan.ttf"),
-            50.,
-            Color::WHITE,
-        );
-        commands.spawn_bundle(cat).insert(TextObj);
-        index += 1;
+    let box_size = Vec2::new(225., 100.);
+    let board_x_offset = window.width() / 1.9;
+    for (index, category) in categories.iter().enumerate() {
+        // Categories are in left-to-right order; boxes are right-to-left.
+        let center_x = x_values[5 - index] - board_x_offset + window.width() / 2.;
+        let right = window.width() - center_x - box_size.x / 2.;
+        let bottom = y_values[1] - box_size.y / 2.;
+        commands
+            .spawn(NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        right: Val::Px(right),
+                        bottom: Val::Px(bottom),
+                        ..Default::default()
+                    },
+                    size: Size::new(Val::Px(box_size.x), Val::Px(box_size.y)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(TextObj(Some(text_to_box_coords(index as i32))))
+            .with_children(|parent| {
+                parent.spawn(
+                    TextBundle::from_section(
+                        *category,
+                        TextStyle {
+                            font: asset_server.load("korinan.ttf"),
+                            font_size: 50.,
+                            color: Color::WHITE,
+                        },
+                    )
+                    .with_text_alignment(TextAlignment::Center),
+                );
+            });
     }
 
     let amounts: Vec<i32> = vec![200, 400, 600, 800, 1000];
@@ -130,15 +155,18 @@ fn setup(
                 50.,
                 Color::ORANGE,
             );
-            commands.spawn_bundle(a).insert(TextObj);
+            let box_index = text_to_box_coords(((y_index - 1) * 6 + i) as i32);
+            commands.spawn(a).insert(TextObj(Some(box_index)));
         }
         y_index += 1;
     }
 
     let blue_box: SpriteBundle = SpriteBundle {
-        material: materials.add((Color::BLUE).into()),
-        sprite: Sprite::new(Vec2::new(225., 100.)),
-        //sprite: Sprite::new(Vec2::new(250., 125.)),
+        sprite: Sprite {
+            color: Color::BLUE,
+            custom_size: Some(box_size),
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -147,13 +175,13 @@ fn setup(
             let mut new_box: SpriteBundle = blue_box.clone();
             new_box.transform = Transform {
                 translation: Vec3::new(
-                    x_values[i] - (window.width() / 1.9), // idk why 1.9, just seems to work
+                    x_values[i] - board_x_offset, // idk why 1.9, just seems to work
                     y_values[j] - (window.height() / 2.),
                     10.,
                 ),
                 ..Default::default()
             };
-            commands.spawn_bundle(new_box).insert(BoxObj);
+            commands.spawn(new_box).insert(BoxObj);
         }
     }
 }
@@ -165,7 +193,7 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
             align_content: AlignContent::Center,
             justify_content: JustifyContent::Center,
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 bottom: Val::Px(pos.y), // - (size / 2.)), //Val::Px(5.0),
                 right: Val::Px(pos.x), // - ((s.len() as f32 * (size / 2.)) / 2.)), //Val::Px(15.0),
                 ..Default::default()
@@ -173,19 +201,15 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
             ..Default::default()
         },
 
-        text: Text::with_section(
+        text: Text::from_section(
             s,
             TextStyle {
                 font: font,
                 font_size: size,
                 color: color,
             },
-            TextAlignment {
-                horizontal: HorizontalAlign::Center,
-                vertical: VerticalAlign::Center,
-                ..Default::default()
-            },
-        ),
+        )
+        .with_alignment(TextAlignment::Center),
         ..Default::default()
     };
 }
@@ -193,93 +217,94 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
 fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
-    mut box_query: Query<(Entity, &mut Transform, &Sprite, With<BoxObj>)>,
-    mut text_query: Query<(Entity, &mut Style, With<TextObj>)>,
-    mut clue_box_query: Query<(Entity, With<ClueBox>)>,
-    mut clue_text_query: Query<(Entity, With<ClueText>)>,
-    windows: Res<Windows>,
+    mut box_query: Query<(Entity, &mut Transform, &Sprite), With<BoxObj>>,
+    mut text_query: Query<(&mut Style, &TextObj)>,
+    clue_box_query: Query<Entity, With<ClueBox>>,
+    clue_text_query: Query<Entity, With<ClueText>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut reading: ResMut<ReadingClue>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         if (reading.0) {
-            for (clue_text_entity, _) in clue_text_query.iter_mut() {
+            for clue_text_entity in clue_text_query.iter() {
                 commands.entity(clue_text_entity).despawn();
             }
-            for (clue_box_entity, _) in clue_box_query.iter_mut() {
+            for clue_box_entity in clue_box_query.iter() {
                 commands.entity(clue_box_entity).despawn();
             }
-            let mut text_iter: i32 = 0;
-            for (text_entity, mut text_style, _) in text_query.iter_mut() {
-                /*
-                if (text_iter < 7) {
-                    // To keep categories + title unmoved
-                    text_iter += 1;
+            for (mut text_style, text_obj) in text_query.iter_mut() {
+                if text_obj.0.is_none() {
+                    // Keep the title at the top.
                     continue;
                 }
-                */
-                if (text_iter == 0) {
-                    // To keep title at top, optional as well
-                    text_iter += 1;
-                    continue;
-                }
-                let new_bottom: Val = text_style.position.bottom + (-5000.);
-                let new_right: Val = text_style.position.right + (-5000.);
-                text_style.position = Rect {
-                    bottom: new_bottom,
-                    right: new_right,
-                    ..Default::default()
-                }
+                text_style
+                    .position
+                    .bottom
+                    .try_sub_assign(Val::Px(5000.))
+                    .unwrap();
+                text_style
+                    .position
+                    .right
+                    .try_sub_assign(Val::Px(5000.))
+                    .unwrap();
             }
             reading.0 = !reading.0;
         } else {
-            let win = windows.get_primary().expect("No Window");
-            let mouse_pos_raw: Vec2 = win.cursor_position().expect("No Mouse Pos");
+            let Ok(win) = windows.get_single() else {
+                return;
+            };
+            let Some(mouse_pos_raw) = win.cursor_position() else {
+                return;
+            };
             let mouse_pos: Vec2 = Vec2::new(
                 mouse_pos_raw.x - (win.width() / 2.),
                 mouse_pos_raw.y - (win.height() / 2.),
             );
             //println!("{}, {}", mouse_pos.x, mouse_pos.y);
             let mut i: i32 = 0;
-            for (box_entity, mut box_tf, box_sprite, _) in box_query.iter_mut() {
+            for (box_entity, mut box_tf, box_sprite) in box_query.iter_mut() {
                 //println!("Box: {}", box_tf.translation);
+                let box_size = box_sprite.custom_size.unwrap();
                 if ((i % 6) != 0
-                    && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
-                    && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
-                    && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
-                    && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
+                    && mouse_pos.x < box_tf.translation.x + (box_size.x / 2.)
+                    && mouse_pos.x > box_tf.translation.x - (box_size.x / 2.)
+                    && mouse_pos.y < box_tf.translation.y + (box_size.y / 2.)
+                    && mouse_pos.y > box_tf.translation.y - (box_size.y / 2.))
                 {
                     // Move out of way rather than despawn because of future iteration
                     box_tf.translation = Vec3::new(9000., 9000., 15.);
 
-                    let mut j: i32 = 0;
-                    for (text_entity, mut text_style, _) in text_query.iter_mut() {
-                        //println!("j{}", j);
-                        if (i == text_to_box_coords(j - 1)) {
+                    for (mut text_style, text_obj) in text_query.iter_mut() {
+                        if text_obj.0 == Some(i) {
                             // Move out of way rather than despawn because of future iteration
-                            let new_bottom: Val = text_style.position.bottom + 5000.;
-                            let new_right: Val = text_style.position.right + 5000.;
-                            text_style.position = Rect {
-                                bottom: new_bottom,
-                                right: new_right,
-                                ..Default::default()
-                            };
+                            text_style
+                                .position
+                                .bottom
+                                .try_add_assign(Val::Px(5000.))
+                                .unwrap();
+                            text_style
+                                .position
+                                .right
+                                .try_add_assign(Val::Px(5000.))
+                                .unwrap();
                             break;
                         }
-                        j += 1;
                     }
 
                     let mut clue_box = SpriteBundle {
-                        material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(1200., 620.)),
+                        sprite: Sprite {
+                            color: Color::MIDNIGHT_BLUE,
+                            custom_size: Some(Vec2::new(1200., 620.)),
+                            ..Default::default()
+                        },
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
                         translation: Vec3::new(0., -10., 15.),
                         ..Default::default()
                     };
-                    commands.spawn_bundle(clue_box).insert(ClueBox);
+                    commands.spawn(clue_box).insert(ClueBox);
 
                     let clue_text: &str = get_clue(i);
                     let clue: TextBundle = gen_text(
@@ -292,28 +317,22 @@ fn user_click(
                         50.,
                         Color::WHITE,
                     );
-                    commands.spawn_bundle(clue).insert(ClueText);
-                    let mut text_iter: i32 = 0;
-                    for (text_entity, mut text_style, _) in text_query.iter_mut() {
-                        /*
-                        if (text_iter < 7) {
-                            // To keep categories + title unmoved: genuinely optional, but I like it
-                            text_iter += 1;
+                    commands.spawn(clue).insert(ClueText);
+                    for (mut text_style, text_obj) in text_query.iter_mut() {
+                        if text_obj.0.is_none() {
+                            // Keep the title at the top.
                             continue;
                         }
-                        */
-                        if (text_iter == 0) {
-                            // To keep title at top, optional as well
-                            text_iter += 1;
-                            continue;
-                        }
-                        let new_bottom: Val = text_style.position.bottom + 5000.;
-                        let new_right: Val = text_style.position.right + 5000.;
-                        text_style.position = Rect {
-                            bottom: new_bottom,
-                            right: new_right,
-                            ..Default::default()
-                        };
+                        text_style
+                            .position
+                            .bottom
+                            .try_add_assign(Val::Px(5000.))
+                            .unwrap();
+                        text_style
+                            .position
+                            .right
+                            .try_add_assign(Val::Px(5000.))
+                            .unwrap();
                     }
 
                     reading.0 = !reading.0;

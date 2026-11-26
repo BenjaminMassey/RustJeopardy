@@ -24,7 +24,8 @@ This is a rather basic Rust setup, so usage should be straight-forward.
 I will note for those looking at the code that this is my first Rust application, so if anything
 seems off or strange then it probably just is.
 
-This was written with version 1.54.0 installed, and should be able to be run standardly with "cargo run".
+Originally written with Rust 1.54.0, this project now uses the
+Rust 2024 edition and Bevy 0.10. Run it with `cargo run`.
 
 ## Contact
 
