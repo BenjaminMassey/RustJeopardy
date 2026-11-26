@@ -18,7 +18,8 @@ struct WinSize {
 }
 
 #[derive(Component)]
-struct TextObj;
+/// The box index for board text, or `None` for the title.
+struct TextObj(Option<i32>);
 #[derive(Component)]
 struct BoxObj;
 #[derive(Component)]
@@ -89,7 +90,7 @@ fn setup(
         100.0,
         Color::YELLOW,
     );
-    commands.spawn(title).insert(TextObj);
+    commands.spawn(title).insert(TextObj(None));
 
     // Make the categories
     let categories: Vec<&str> = vec![
@@ -101,25 +102,43 @@ fn setup(
         "Random\n& Misc",
     ];
 
-    let mut index: usize = 0;
-    for category in &categories {
-        let mut x: f32 = x_values[index];
-        let y: f32 = y_values[1];
-        match index {
-            // arbitrary addition for positioning: BAD
-            0 | 2 => x += 20.,
-            1 => x += 10.,
-            _ => (),
-        }
-        let cat: TextBundle = gen_text(
-            category,
-            Vec2::new(x - 125., y - 50.), // arbitrary subtractions for positioning: BAD
-            asset_server.load("korinan.ttf"),
-            50.,
-            Color::WHITE,
-        );
-        commands.spawn(cat).insert(TextObj);
-        index += 1;
+    let box_size = Vec2::new(225., 100.);
+    let board_x_offset = window.width() / 1.9;
+    for (index, category) in categories.iter().enumerate() {
+        // Categories are in left-to-right order; boxes are right-to-left.
+        let center_x = x_values[5 - index] - board_x_offset + window.width() / 2.;
+        let right = window.width() - center_x - box_size.x / 2.;
+        let bottom = y_values[1] - box_size.y / 2.;
+        commands
+            .spawn(NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        right: Val::Px(right),
+                        bottom: Val::Px(bottom),
+                        ..Default::default()
+                    },
+                    size: Size::new(Val::Px(box_size.x), Val::Px(box_size.y)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(TextObj(Some(text_to_box_coords(index as i32))))
+            .with_children(|parent| {
+                parent.spawn(
+                    TextBundle::from_section(
+                        *category,
+                        TextStyle {
+                            font: asset_server.load("korinan.ttf"),
+                            font_size: 50.,
+                            color: Color::WHITE,
+                        },
+                    )
+                    .with_text_alignment(TextAlignment::Center),
+                );
+            });
     }
 
     let amounts: Vec<i32> = vec![200, 400, 600, 800, 1000];
@@ -136,7 +155,8 @@ fn setup(
                 50.,
                 Color::ORANGE,
             );
-            commands.spawn(a).insert(TextObj);
+            let box_index = text_to_box_coords(((y_index - 1) * 6 + i) as i32);
+            commands.spawn(a).insert(TextObj(Some(box_index)));
         }
         y_index += 1;
     }
@@ -144,7 +164,7 @@ fn setup(
     let blue_box: SpriteBundle = SpriteBundle {
         sprite: Sprite {
             color: Color::BLUE,
-            custom_size: Some(Vec2::new(225., 100.)),
+            custom_size: Some(box_size),
             ..Default::default()
         },
         ..Default::default()
@@ -155,7 +175,7 @@ fn setup(
             let mut new_box: SpriteBundle = blue_box.clone();
             new_box.transform = Transform {
                 translation: Vec3::new(
-                    x_values[i] - (window.width() / 1.9), // idk why 1.9, just seems to work
+                    x_values[i] - board_x_offset, // idk why 1.9, just seems to work
                     y_values[j] - (window.height() / 2.),
                     10.,
                 ),
@@ -198,7 +218,7 @@ fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
     mut box_query: Query<(Entity, &mut Transform, &Sprite), With<BoxObj>>,
-    mut text_query: Query<(Entity, &mut Style), With<TextObj>>,
+    mut text_query: Query<(&mut Style, &TextObj)>,
     clue_box_query: Query<Entity, With<ClueBox>>,
     clue_text_query: Query<Entity, With<ClueText>>,
     windows: Query<&Window, With<PrimaryWindow>>,
@@ -213,18 +233,9 @@ fn user_click(
             for clue_box_entity in clue_box_query.iter() {
                 commands.entity(clue_box_entity).despawn();
             }
-            let mut text_iter: i32 = 0;
-            for (text_entity, mut text_style) in text_query.iter_mut() {
-                /*
-                if (text_iter < 7) {
-                    // To keep categories + title unmoved
-                    text_iter += 1;
-                    continue;
-                }
-                */
-                if (text_iter == 0) {
-                    // To keep title at top, optional as well
-                    text_iter += 1;
+            for (mut text_style, text_obj) in text_query.iter_mut() {
+                if text_obj.0.is_none() {
+                    // Keep the title at the top.
                     continue;
                 }
                 text_style
@@ -264,10 +275,8 @@ fn user_click(
                     // Move out of way rather than despawn because of future iteration
                     box_tf.translation = Vec3::new(9000., 9000., 15.);
 
-                    let mut j: i32 = 0;
-                    for (text_entity, mut text_style) in text_query.iter_mut() {
-                        //println!("j{}", j);
-                        if (i == text_to_box_coords(j - 1)) {
+                    for (mut text_style, text_obj) in text_query.iter_mut() {
+                        if text_obj.0 == Some(i) {
                             // Move out of way rather than despawn because of future iteration
                             text_style
                                 .position
@@ -281,7 +290,6 @@ fn user_click(
                                 .unwrap();
                             break;
                         }
-                        j += 1;
                     }
 
                     let mut clue_box = SpriteBundle {
@@ -310,18 +318,9 @@ fn user_click(
                         Color::WHITE,
                     );
                     commands.spawn(clue).insert(ClueText);
-                    let mut text_iter: i32 = 0;
-                    for (text_entity, mut text_style) in text_query.iter_mut() {
-                        /*
-                        if (text_iter < 7) {
-                            // To keep categories + title unmoved: genuinely optional, but I like it
-                            text_iter += 1;
-                            continue;
-                        }
-                        */
-                        if (text_iter == 0) {
-                            // To keep title at top, optional as well
-                            text_iter += 1;
+                    for (mut text_style, text_obj) in text_query.iter_mut() {
+                        if text_obj.0.is_none() {
+                            // Keep the title at the top.
                             continue;
                         }
                         text_style
