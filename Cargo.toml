@@ -1,14 +1,10 @@
 [package]
 name = "jeopardy"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.6.1"
+bevy = "0.10"
 rand = "0.6"
-
-[build-dependencies]
-# Bevy 0.6's derive macros use syn APIs gated behind "full".
-syn = { version = "1", features = ["full"] }
