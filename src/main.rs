@@ -15,16 +15,20 @@ struct WinSize {
     h: f32,
 }
 
+#[derive(Component)]
 struct TextObj;
+#[derive(Component)]
 struct BoxObj;
+#[derive(Component)]
 struct ClueBox;
 
+#[derive(Component)]
 struct ClueText;
 
 struct ReadingClue(bool);
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WindowDescriptor {
             title: "Jeopardy".to_string(),
@@ -34,15 +38,14 @@ fn main() {
         })
         .insert_resource(ReadingClue(false))
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup.system())
-        .add_system(user_click.system())
+        .add_startup_system(setup)
+        .add_system(user_click)
         .run();
 }
 
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut windows: ResMut<Windows>,
 ) {
     // Window setup
@@ -136,9 +139,11 @@ fn setup(
     }
 
     let blue_box: SpriteBundle = SpriteBundle {
-        material: materials.add((Color::BLUE).into()),
-        sprite: Sprite::new(Vec2::new(225., 100.)),
-        //sprite: Sprite::new(Vec2::new(250., 125.)),
+        sprite: Sprite {
+            color: Color::BLUE,
+            custom_size: Some(Vec2::new(225., 100.)),
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -199,7 +204,6 @@ fn user_click(
     mut clue_text_query: Query<(Entity, With<ClueText>)>,
     windows: Res<Windows>,
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut reading: ResMut<ReadingClue>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
@@ -244,11 +248,12 @@ fn user_click(
             let mut i: i32 = 0;
             for (box_entity, mut box_tf, box_sprite, _) in box_query.iter_mut() {
                 //println!("Box: {}", box_tf.translation);
+                let box_size = box_sprite.custom_size.unwrap();
                 if ((i % 6) != 0
-                    && mouse_pos.x < box_tf.translation.x + (box_sprite.size.x / 2.)
-                    && mouse_pos.x > box_tf.translation.x - (box_sprite.size.x / 2.)
-                    && mouse_pos.y < box_tf.translation.y + (box_sprite.size.y / 2.)
-                    && mouse_pos.y > box_tf.translation.y - (box_sprite.size.y / 2.))
+                    && mouse_pos.x < box_tf.translation.x + (box_size.x / 2.)
+                    && mouse_pos.x > box_tf.translation.x - (box_size.x / 2.)
+                    && mouse_pos.y < box_tf.translation.y + (box_size.y / 2.)
+                    && mouse_pos.y > box_tf.translation.y - (box_size.y / 2.))
                 {
                     // Move out of way rather than despawn because of future iteration
                     box_tf.translation = Vec3::new(9000., 9000., 15.);
@@ -271,8 +276,11 @@ fn user_click(
                     }
 
                     let mut clue_box = SpriteBundle {
-                        material: materials.add((Color::MIDNIGHT_BLUE).into()),
-                        sprite: Sprite::new(Vec2::new(1200., 620.)),
+                        sprite: Sprite {
+                            color: Color::MIDNIGHT_BLUE,
+                            custom_size: Some(Vec2::new(1200., 620.)),
+                            ..Default::default()
+                        },
                         ..Default::default()
                     };
                     clue_box.transform = Transform {
