@@ -1,10 +1,11 @@
 [package]
 name = "jeopardy"
 version = "0.1.0"
-edition = "2018"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.5"
+bevy = "0.10"
 rand = "0.6"
+xml-rs = "0.8"
