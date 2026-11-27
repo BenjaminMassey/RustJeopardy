@@ -43,10 +43,8 @@ impl Quiz {
         let mut categories = Vec::new();
         loop {
             match next_tag(&mut reader)? {
-                XmlEvent::StartElement {
-                    name, attributes, ..
-                } if name.local_name == "category" => {
-                    categories.push(Category::read(&mut reader, &attributes)?);
+                XmlEvent::StartElement { name, .. } if name.local_name == "category" => {
+                    categories.push(Category::read(&mut reader)?);
                 }
                 XmlEvent::EndElement { name } if name.local_name == "game" => break,
                 _ => return Err("expected <category> or </game>".into()),
@@ -76,16 +74,18 @@ impl Quiz {
 }
 
 impl Category {
-    fn read(
-        reader: &mut EventReader<impl Read>,
-        attributes: &[OwnedAttribute],
-    ) -> QuizResult<Self> {
-        let name = attribute(attributes, "name").ok_or("category is missing a name")?;
+    fn read(reader: &mut EventReader<impl Read>) -> QuizResult<Self> {
+        let name = match next_tag(reader)? {
+            XmlEvent::StartElement { name, .. } if name.local_name == "name" => {
+                read_text(reader, "name")?
+            }
+            _ => return Err("expected <name> as the first element of <category>".into()),
+        };
         let mut clues = Vec::new();
         loop {
             match next_tag(reader)? {
                 XmlEvent::StartElement { name, .. } if name.local_name == "clue" => {
-                    clues.push(read_clue(reader)?);
+                    clues.push(read_text(reader, "clue")?);
                 }
                 XmlEvent::EndElement { name } if name.local_name == "category" => break,
                 _ => return Err("expected <clue> or </category>".into()),
@@ -109,7 +109,7 @@ fn attribute(attributes: &[OwnedAttribute], name: &str) -> Option<String> {
         .map(|a| a.value.clone())
 }
 
-/// Skip formatting whitespace between XML elements, but not in clues.
+/// Skip formatting whitespace between XML elements, but not in their text.
 fn next_tag(reader: &mut EventReader<impl Read>) -> QuizResult<XmlEvent> {
     loop {
         match reader.next()? {
@@ -122,7 +122,8 @@ fn next_tag(reader: &mut EventReader<impl Read>) -> QuizResult<XmlEvent> {
     }
 }
 
-fn read_clue(reader: &mut EventReader<impl Read>) -> QuizResult<String> {
+/// Read plain element text, preserving spaces and explicit line breaks.
+fn read_text(reader: &mut EventReader<impl Read>, element: &str) -> QuizResult<String> {
     let mut text = String::new();
     loop {
         match reader.next()? {
@@ -130,8 +131,8 @@ fn read_clue(reader: &mut EventReader<impl Read>) -> QuizResult<String> {
                 text.push_str(&s)
             }
             XmlEvent::Comment(_) => continue,
-            XmlEvent::EndElement { name } if name.local_name == "clue" => return Ok(text),
-            _ => return Err("expected plain text inside <clue>".into()),
+            XmlEvent::EndElement { name } if name.local_name == element => return Ok(text),
+            _ => return Err(format!("expected plain text inside <{element}>").into()),
         }
     }
 }
@@ -143,7 +144,9 @@ mod tests {
     fn example_xml() -> String {
         let mut source = String::from("<game name=\"Test &amp; Quiz\" author=\"Tester\">");
         for column in 0..CATEGORY_COUNT {
-            source.push_str(&format!("<category name=\"Category {column}&#10;Name\">"));
+            source.push_str(&format!(
+                "<category><name>Category {column}\nName &amp; More</name>"
+            ));
             for row in 0..CLUE_COUNT {
                 source.push_str(&format!(
                     "<clue>Clue {column}/{row}\n &lt; &amp; &gt;\n&#32;</clue>"
@@ -162,7 +165,7 @@ mod tests {
         for column in 0..CATEGORY_COUNT {
             assert_eq!(
                 quiz.categories[column].name,
-                format!("Category {column}\nName")
+                format!("Category {column}\nName & More")
             );
             let box_base = (CATEGORY_COUNT - 1 - column) * (CLUE_COUNT + 1);
             assert_eq!(quiz.clue_for_box(box_base), None);
@@ -182,13 +185,13 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/gibli-quiz.xml");
         let quiz = Quiz::load(path).unwrap();
         assert_eq!(quiz.name, "GHIBLI JEOPARDY");
-        assert_eq!(quiz.categories[0].name, "General\nMovies");
-        assert_eq!(quiz.categories[2].name, "Creatures\n& Animals");
-        assert_eq!(quiz.categories[5].name, "Random\n& Misc");
+        assert_eq!(quiz.categories[0].name, "General Movies");
+        assert_eq!(quiz.categories[2].name, "Creatures & Animals");
+        assert_eq!(quiz.categories[5].name, "Random & Misc");
         assert!(
             quiz.clue_for_box(31)
                 .unwrap()
-                .starts_with("This Ghibli film\nfamously features")
+                .starts_with("This Ghibli film famously features")
         );
         assert!(
             quiz.clue_for_box(1)
@@ -201,16 +204,23 @@ mod tests {
     fn rejects_invalid_games() {
         assert!(Quiz::read("<quiz/>".as_bytes()).is_err());
         assert!(Quiz::read("<game/>".as_bytes()).is_err());
-        assert!(Quiz::read("<game><category name=\"Too short\"/></game>".as_bytes()).is_err());
+        assert!(
+            Quiz::read("<game><category><name>Too short</name></category></game>".as_bytes())
+                .is_err()
+        );
         assert!(
             Quiz::read("<game><category><clue>Missing name</clue></category></game>".as_bytes())
                 .is_err()
         );
         assert!(
-            Quiz::read("<game><category name=\"Broken\"><clue></category></game>".as_bytes())
+            Quiz::read("<game><category><name>Broken</name><clue></category></game>".as_bytes())
                 .is_err()
         );
         let extra = example_xml().replace("</game>", "</game><game/>");
         assert!(Quiz::read(extra.as_bytes()).is_err());
+        let duplicate = example_xml().replace("</name>", "</name><name>Duplicate</name>");
+        assert!(Quiz::read(duplicate.as_bytes()).is_err());
+        let nested = example_xml().replace("</name>", "<em>Nested</em></name>");
+        assert!(Quiz::read(nested.as_bytes()).is_err());
     }
 }

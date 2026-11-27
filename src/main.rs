@@ -39,6 +39,11 @@ struct ReadingClue(bool);
 
 const DEFAULT_QUIZ: &str = "assets/gibli-quiz.xml";
 const USAGE: &str = "Usage: jeopardy [QUIZ.xml]";
+const CATEGORY_BOX_SIZE: Vec2 = Vec2::new(225., 100.);
+const CATEGORY_FONT_SIZE: f32 = 40.;
+const CATEGORY_TEXT_PADDING: f32 = 8.;
+const CLUE_BOX_SIZE: Vec2 = Vec2::new(1200., 620.);
+const CLUE_TEXT_PADDING: f32 = 30.;
 
 fn main() -> ExitCode {
     let mut args = std::env::args_os().skip(1);
@@ -125,7 +130,7 @@ fn setup(
     commands.spawn(title).insert(TextObj(None));
 
     // Make the categories
-    let box_size = Vec2::new(225., 100.);
+    let box_size = CATEGORY_BOX_SIZE;
     let board_x_offset = window.width() / 1.9;
     for (index, category) in quiz.categories.iter().enumerate() {
         // Categories are in left-to-right order; boxes are right-to-left.
@@ -133,34 +138,15 @@ fn setup(
         let right = window.width() - center_x - box_size.x / 2.;
         let bottom = y_values[1] - box_size.y / 2.;
         commands
-            .spawn(NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    position: UiRect {
-                        right: Val::Px(right),
-                        bottom: Val::Px(bottom),
-                        ..Default::default()
-                    },
-                    size: Size::new(Val::Px(box_size.x), Val::Px(box_size.y)),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..Default::default()
-                },
-                ..Default::default()
-            })
+            .spawn(centered_text_container(Vec2::new(right, bottom), box_size))
             .insert(TextObj(Some(text_to_box_coords(index as i32))))
             .with_children(|parent| {
-                parent.spawn(
-                    TextBundle::from_section(
-                        &category.name,
-                        TextStyle {
-                            font: asset_server.load("korinan.ttf"),
-                            font_size: 50.,
-                            color: Color::WHITE,
-                        },
-                    )
-                    .with_text_alignment(TextAlignment::Center),
-                );
+                parent.spawn(wrapped_text(
+                    &category.name,
+                    asset_server.load("korinan.ttf"),
+                    CATEGORY_FONT_SIZE,
+                    box_size.x - 2. * CATEGORY_TEXT_PADDING,
+                ));
             });
     }
 
@@ -209,6 +195,43 @@ fn setup(
     }
 }
 
+/// A fixed-size UI region that centers its child horizontally and vertically.
+fn centered_text_container(pos: Vec2, size: Vec2) -> NodeBundle {
+    NodeBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                right: Val::Px(pos.x),
+                bottom: Val::Px(pos.y),
+                ..Default::default()
+            },
+            size: Size::new(Val::Px(size.x), Val::Px(size.y)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..Default::default()
+        },
+        ..Default::default()
+    }
+}
+
+/// Bevy 0.10 needs an explicit pixel width on the text itself to wrap it.
+/// Leave the actual width and height intrinsic, so flexbox can center it.
+fn wrapped_text(s: &str, font: Handle<Font>, font_size: f32, width: f32) -> TextBundle {
+    TextBundle::from_section(
+        s,
+        TextStyle {
+            font,
+            font_size,
+            color: Color::WHITE,
+        },
+    )
+    .with_text_alignment(TextAlignment::Center)
+    .with_style(Style {
+        max_size: Size::new(Val::Px(width), Val::Undefined),
+        ..Default::default()
+    })
+}
+
 fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> TextBundle {
     return TextBundle {
         style: Style {
@@ -252,7 +275,7 @@ fn user_click(
     if mouse_input.just_pressed(MouseButton::Left) {
         if (reading.0) {
             for clue_text_entity in clue_text_query.iter() {
-                commands.entity(clue_text_entity).despawn();
+                commands.entity(clue_text_entity).despawn_recursive();
             }
             for clue_box_entity in clue_box_query.iter() {
                 commands.entity(clue_box_entity).despawn();
@@ -321,7 +344,7 @@ fn user_click(
                     let mut clue_box = SpriteBundle {
                         sprite: Sprite {
                             color: Color::MIDNIGHT_BLUE,
-                            custom_size: Some(Vec2::new(1200., 620.)),
+                            custom_size: Some(CLUE_BOX_SIZE),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -332,17 +355,21 @@ fn user_click(
                     };
                     commands.spawn(clue_box).insert(ClueBox);
 
-                    let clue: TextBundle = gen_text(
-                        clue_text,
-                        Vec2::new(
-                            (win.width() / 2.) - 350.,
-                            ((win.height() / 2.) - 80.) - 125.,
-                        ), // arbitrary subtractions for positioning: BAD
-                        asset_server.load("korinan.ttf"),
-                        50.,
-                        Color::WHITE,
+                    let clue_pos = Vec2::new(
+                        (win.width() - CLUE_BOX_SIZE.x) / 2.,
+                        (win.height() - CLUE_BOX_SIZE.y) / 2. - 10.,
                     );
-                    commands.spawn(clue).insert(ClueText);
+                    commands
+                        .spawn(centered_text_container(clue_pos, CLUE_BOX_SIZE))
+                        .insert(ClueText)
+                        .with_children(|parent| {
+                            parent.spawn(wrapped_text(
+                                clue_text,
+                                asset_server.load("korinan.ttf"),
+                                50.,
+                                CLUE_BOX_SIZE.x - 2. * CLUE_TEXT_PADDING,
+                            ));
+                        });
                     for (mut text_style, text_obj) in text_query.iter_mut() {
                         if text_obj.0.is_none() {
                             // Keep the title at the top.

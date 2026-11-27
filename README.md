@@ -37,13 +37,15 @@ cargo run -- path/to/my-quiz.xml
 ### Quiz files
 
 Use `assets/gibli-quiz.xml` as a template. A quiz has a `<game>`
-root, six `<category>` elements in left-to-right order, and
-five `<clue>` elements in each category, from $200 to $1000.
+root and six `<category>` elements in left-to-right order.
+Each category contains a `<name>` element followed by five
+`<clue>` elements, from $200 to $1000.
 For example, one category of a game could look like this:
 
 ```xml
 <game name="General Knowledge" author="Quiz writer">
-  <category name="Geography">
+  <category>
+    <name>Geography</name>
     <clue>The capital of Oregon.</clue>
     <clue>This river flows through Portland.</clue>
     <clue>The highest mountain in Oregon.</clue>
@@ -55,11 +57,19 @@ For example, one category of a game could look like this:
 ```
 
 The game name is optional and defaults to `Quiz!`. The author
-attribute is optional metadata. Clue whitespace is preserved
-for display: use line breaks to lay out long clues, `&#10;` for
-line breaks in category names, and `&amp;` for ampersands.
+attribute is optional metadata. Category and clue text wraps
+automatically to fit the display width. Literal newlines are
+also honored in both category names and clues.
+Use `&amp;` for ampersands.
 Malformed XML or an incorrect number of categories or clues
 is reported before the game window opens.
+
+The format is defined in [assets/quiz.xsd](assets/quiz.xsd).
+To validate a quiz against this schema using `xmllint`:
+
+```sh
+xmllint --noout --schema assets/quiz.xsd path/to/my-quiz.xml
+```
 
 ## Contact
 

@@ -1,234 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<game name="GHIBLI JEOPARDY">
-  <category name="General&#10;Movies">
-    <clue>This Ghibli film
-famously features
-a humanoid pig
-as its main character.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This Ghibli film stars a young girl
-who stumbles upon a furry woodland creature
-who helps her in rather magical ways.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This Ghibli film is set mainly in a
-whimsical bathhouse, though it begins
-with a simple car ride and the discovery
-of a unique market town.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This Ghibli film is on the more serious
-side, primarily because it takes place
-during World War II and features
-firebombing and children struggling
-to survive on their own.&#32;
-&#32;</clue>
-    <clue>This Ghibli film has one of the most obvious
-environmentalist messages, features many
-animal gods such as a boar, a deer,
-and wolves, and stars a warrior princess.
-&#32;
-&#32;
-&#32;</clue>
+<game name="GHIBLI JEOPARDY"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="quiz.xsd">
+  <category>
+    <name>General Movies</name>
+    <clue>This Ghibli film famously features a humanoid pig as its main character.</clue>
+    <clue>This Ghibli film stars a young girl who stumbles upon a furry woodland creature who helps her in rather magical ways.</clue>
+    <clue>This Ghibli film is set mainly in a whimsical bathhouse, though it begins with a simple car ride and the discovery of a unique market town.</clue>
+    <clue>This Ghibli film is on the more serious side, primarily because it takes place during World War II and features firebombing and children struggling to survive on their own.</clue>
+    <clue>This Ghibli film has one of the most obvious environmentalist messages, features many animal gods such as a boar, a deer, and wolves, and stars a warrior princess.</clue>
   </category>
-  <category name="Humans&#10;(Mostly)">
-    <clue>This helpful young boy ensures the
-success of the young girl
-protagonist, but is later revealed
-to have a dragon form. He is a
-character from the film Spirited Away.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This young boy saves a goldfish in his seaside town,
-and it licks his cut finger to prove its mortality.
-He is both the love interest and co-main character
-alongside the film’s title character, Ponyo.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This 10-year-old girl stars in My Neighbor Totoro
-and has a 4-year-old sister named Mei.
-She struggles with her mother’s illness and goes
-on some magical journeys with the movie’s
-woodland creatures, primarily Totoro.
-&#32;
-&#32;</clue>
-    <clue>This young girl stars in The Cat Returns
-as the girl taken by the feline prince to be
-married and live as a cat.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This 16-year-old girl is known as
-“the girl who raises red flags” because of
-the tragic death of her father in the
-Korean War. She lives in Coquelicot Manor and is
-the star of From Up on Poppy Hill.
-&#32;
-&#32;</clue>
+  <category>
+    <name>Humans (Mostly)</name>
+    <clue>This helpful young boy ensures the success of the young girl protagonist, but is later revealed to have a dragon form. He is a character from the film Spirited Away.</clue>
+    <clue>This young boy saves a goldfish in his seaside town, and it licks his cut finger to prove its mortality. He is both the love interest and co-main character alongside the film’s title character, Ponyo.</clue>
+    <clue>This 10-year-old girl stars in My Neighbor Totoro and has a 4-year-old sister named Mei. She struggles with her mother’s illness and goes on some magical journeys with the movie’s woodland creatures, primarily Totoro.</clue>
+    <clue>This young girl stars in The Cat Returns as the girl taken by the feline prince to be married and live as a cat.</clue>
+    <clue>This 16-year-old girl is known as “the girl who raises red flags” because of the tragic death of her father in the Korean War. She lives in Coquelicot Manor and is the star of From Up on Poppy Hill.</clue>
   </category>
-  <category name="Creatures&#10;&amp; Animals">
-    <clue>This iconic black cat stars alongside
-the witch protagonist in Kiki’s Delivery Service.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This creature may be the only one that
-is also a mode of transportation, and is
-rather anti-American considering its
-approval of public transit. It is
-also of note that it is feline
-in nature, which fits the general theme of its
-film’s woodland creatures.
-&#32;</clue>
-    <clue>These tiny, black creatures&#32;
-are generally seen
-carrying rocks or gems and appear in My
-Neighbor Totoro and Spirited Away.
-They leave black dust as they walk
-around and temporarily dissolve when crushed.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This lazy dog — inspired by a
-French hunting dog breed —
-is the “errand dog”
-of the villain Suliman.
-He is a character in the film
-Howl’s Moving Castle.
-&#32;</clue>
-    <clue>This pet fox squirrel was given as
-a gift to the main character. He initially
-shows some aggression before they become friends.
-He stars in Nausicaä of
-the Valley of the Wind.
-&#32;
-&#32;
-&#32;
-&#32;</clue>
+  <category>
+    <name>Creatures &amp; Animals</name>
+    <clue>This iconic black cat stars alongside the witch protagonist in Kiki’s Delivery Service.</clue>
+    <clue>This creature may be the only one that is also a mode of transportation, and is rather anti-American considering its approval of public transit. It is also of note that it is feline in nature, which fits the general theme of its film’s woodland creatures.</clue>
+    <clue>These tiny, black creatures are generally seen carrying rocks or gems and appear in My Neighbor Totoro and Spirited Away. They leave black dust as they walk around and temporarily dissolve when crushed.</clue>
+    <clue>This lazy dog — inspired by a French hunting dog breed — is the “errand dog” of the villain Suliman. He is a character in the film Howl’s Moving Castle.</clue>
+    <clue>This pet fox squirrel was given as a gift to the main character. He initially shows some aggression before they become friends. He stars in Nausicaä of the Valley of the Wind.</clue>
   </category>
-  <category name="Historical&#10;Knowledge">
-    <clue>Despite being released just before Studio
-Ghibli was officially formed, this movie
-is generally cited as the studio’s first
-film, since it featured most of
-the same creators (Hayao Miyazaki as
-the director, for example), story themes, and art
-styles found throughout the rest of Ghibli's portfolio.
-&#32;
-</clue>
-    <clue>This movie is the first feature film
-officially released by Studio Ghibli, in spite of
-many considering it the studio’s second film.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This was the first movie directed
-by Hayao Miyazaki's son, Goro.
-It was famously hated by Hayao
-and struggled more at the box office and
-with critics than
-other Ghibli works.
-&#32;
-&#32;</clue>
-    <clue>This Studio Ghibli film
-was released in 2013.
-&#32;
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This person helped found Studio
-Ghibli as co-director with
-Hayao Miyazaki after working with Hayao and
-Toshio Suzuki (a producer) at the
-animation studio Topcraft.
-&#32;</clue>
+  <category>
+    <name>Historical Knowledge</name>
+    <clue>Despite being released just before Studio Ghibli was officially formed, this movie is generally cited as the studio’s first film, since it featured most of the same creators (Hayao Miyazaki as the director, for example), story themes, and art styles found throughout the rest of Ghibli's portfolio.</clue>
+    <clue>This movie is the first feature film officially released by Studio Ghibli, in spite of many considering it the studio’s second film.</clue>
+    <clue>This was the first movie directed by Hayao Miyazaki's son, Goro. It was famously hated by Hayao and struggled more at the box office and with critics than other Ghibli works.</clue>
+    <clue>This Studio Ghibli film was released in 2013.</clue>
+    <clue>This person helped found Studio Ghibli as co-director with Hayao Miyazaki after working with Hayao and Toshio Suzuki (a producer) at the animation studio Topcraft.</clue>
   </category>
-  <category name="Scary&#10;Villains">
-    <clue>This large, elderly woman is primarily a villain
-because of her greed. She has a younger twin sister,
-loves her son Boh, and is the main antagonist
-in Spirited Away.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This woman is seen as the secondary
-antagonist to Madame Suliman, since her
-role becomes more complicated
-after the start of her story. That being said,
-she notably curses the main character,
-Sophie, to look like an elderly woman,
-using the aging magic she normally casts
-on herself to stay
-young. She stars in Howl’s Moving Castle.</clue>
-    <clue>The villain in this movie kidnaps the female
-lead, Sheeta, and holds her
-captive on an airship. It is
-revealed that he is searching for the kingdom
-of Laputa, whose magic turns out to have a
-connection to the protagonists.
-The main protagonist, Pazu, generally
-foils his schemes.</clue>
-    <clue>This scruffy old fellow kidnaps
-the main character and transforms her into a cat.
-He notably has a purple gem on top of his
-head that looks like a false eye, and his
-two real eyes are different colors: red
-and blue. He stars in The Cat Returns.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This character is the father of the
-main and title character and is more complex&#32;
-and misguided than outright evil. He is a researcher,
-lives in an underwater harbor, and has had&#32;
-children with a sea goddess,
-which explains key parts of the film.
-His appearance is markedly whimsical
-and slender. He stars in Ponyo.</clue>
+  <category>
+    <name>Scary Villains</name>
+    <clue>This large, elderly woman is primarily a villain because of her greed. She has a younger twin sister, loves her son Boh, and is the main antagonist in Spirited Away.</clue>
+    <clue>This woman is seen as the secondary antagonist to Madame Suliman, since her role becomes more complicated after the start of her story. That being said, she notably curses the main character, Sophie, to look like an elderly woman, using the aging magic she normally casts on herself to stay young. She stars in Howl’s Moving Castle.</clue>
+    <clue>The villain in this movie kidnaps the female lead, Sheeta, and holds her captive on an airship. It is revealed that he is searching for the kingdom of Laputa, whose magic turns out to have a connection to the protagonists. The main protagonist, Pazu, generally foils his schemes.</clue>
+    <clue>This scruffy old fellow kidnaps the main character and transforms her into a cat. He notably has a purple gem on top of his head that looks like a false eye, and his two real eyes are different colors: red and blue. He stars in The Cat Returns.</clue>
+    <clue>This character is the father of the main and title character and is more complex and misguided than outright evil. He is a researcher, lives in an underwater harbor, and has had children with a sea goddess, which explains key parts of the film. His appearance is markedly whimsical and slender. He stars in Ponyo.</clue>
   </category>
-  <category name="Random&#10;&amp; Misc">
-    <clue>This “theme park” is set to open
-on November 1, 2022, at Aichi Earth Expo
-Memorial Park in Nagakute, Japan. It is notably
-experience-based and thus features no
-standard rides.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This style of painting is often used
-by Hayao Miyazaki in early sketches
-for Ghibli films, which makes sense considering
-the artistic styles of Ghibli
-films.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>Miyazaki announced his
-retirement from feature films shortly
-after the release of this film.
-&#32;
-&#32;
-&#32;</clue>
-    <clue>This movie is the most recent
-Studio Ghibli venture, with releases
-from 2020 to 2021. It was
-a collaboration between multiple companies
-— not just Studio Ghibli — and was directed by
-Hayao Miyazaki’s son, Goro. Unfortunately, it
-uses 3D animation and has received stellar reviews like
-“With a story as uninspired as its animation, [it is a]
-near-total—misfire for Studio Ghibli.”</clue>
-    <clue>This is the year Disney began a partnership
-with Studio Ghibli to help
-with international releases.
-&#32;
-&#32;
-&#32;</clue>
+  <category>
+    <name>Random &amp; Misc</name>
+    <clue>This “theme park” is set to open on November 1, 2022, at Aichi Earth Expo Memorial Park in Nagakute, Japan. It is notably experience-based and thus features no standard rides.</clue>
+    <clue>This style of painting is often used by Hayao Miyazaki in early sketches for Ghibli films, which makes sense considering the artistic styles of Ghibli films.</clue>
+    <clue>Miyazaki announced his retirement from feature films shortly after the release of this film.</clue>
+    <clue>This movie is the most recent Studio Ghibli venture, with releases from 2020 to 2021. It was a collaboration between multiple companies — not just Studio Ghibli — and was directed by Hayao Miyazaki’s son, Goro. Unfortunately, it uses 3D animation and has received stellar reviews like “With a story as uninspired as its animation, [it is a] near-total—misfire for Studio Ghibli.”</clue>
+    <clue>This is the year Disney began a partnership with Studio Ghibli to help with international releases.</clue>
   </category>
 </game>

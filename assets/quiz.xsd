@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="game">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="category" minOccurs="6" maxOccurs="6">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="name" type="xs:string"/>
+              <xs:element name="clue" type="xs:string"
+                          minOccurs="5" maxOccurs="5"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" default="Quiz!"/>
+      <xs:attribute name="author" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
