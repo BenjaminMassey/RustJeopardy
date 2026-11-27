@@ -1,5 +1,11 @@
 #![allow(unused)]
 
+mod quiz;
+
+use std::{path::PathBuf, process::ExitCode};
+
+use quiz::Quiz;
+
 use bevy::{
     input::mouse::{mouse_button_input_system, MouseButtonInput},
     prelude::*,
@@ -21,7 +27,7 @@ struct WinSize {
 /// The box index for board text, or `None` for the title.
 struct TextObj(Option<i32>);
 #[derive(Component)]
-struct BoxObj;
+struct BoxObj(usize);
 #[derive(Component)]
 struct ClueBox;
 
@@ -31,8 +37,32 @@ struct ClueText;
 #[derive(Resource)]
 struct ReadingClue(bool);
 
-fn main() {
+const DEFAULT_QUIZ: &str = "assets/gibli-quiz.xml";
+const USAGE: &str = "Usage: jeopardy [QUIZ.xml]";
+
+fn main() -> ExitCode {
+    let mut args = std::env::args_os().skip(1);
+    let quiz_path = match (args.next(), args.next()) {
+        (None, _) => PathBuf::from(DEFAULT_QUIZ),
+        (Some(arg), None) if arg == "--help" || arg == "-h" => {
+            println!("{USAGE}\nDefault quiz: {DEFAULT_QUIZ}");
+            return ExitCode::SUCCESS;
+        }
+        (Some(arg), None) => PathBuf::from(arg),
+        _ => {
+            eprintln!("{USAGE}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let quiz = match Quiz::load(&quiz_path) {
+        Ok(quiz) => quiz,
+        Err(err) => {
+            eprintln!("Could not load quiz {}: {err}", quiz_path.display());
+            return ExitCode::FAILURE;
+        }
+    };
     App::new()
+        .insert_resource(quiz)
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(ReadingClue(false))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -47,12 +77,14 @@ fn main() {
         .add_startup_system(setup)
         .add_system(user_click)
         .run();
+    ExitCode::SUCCESS
 }
 
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     windows: Query<&Window, With<PrimaryWindow>>,
+    quiz: Res<Quiz>,
 ) {
     // Window setup
     let window = windows.single();
@@ -84,7 +116,7 @@ fn setup(
 
     // Make the title
     let title = gen_text(
-        "GHIBLI JEOPARDY",
+        &quiz.name,
         Vec2::new((window.width() / 2.) - 350., y_values[0] - 60.), // arbitrary subtractions for positioning: BAD
         asset_server.load("korinan.ttf"),
         100.0,
@@ -93,18 +125,9 @@ fn setup(
     commands.spawn(title).insert(TextObj(None));
 
     // Make the categories
-    let categories: Vec<&str> = vec![
-        "General\nMovies",
-        "Humans\n(Mostly)",
-        "Creatures\n& Animals",
-        "Historical\nKnowledge",
-        "Scary\nVillains",
-        "Random\n& Misc",
-    ];
-
     let box_size = Vec2::new(225., 100.);
     let board_x_offset = window.width() / 1.9;
-    for (index, category) in categories.iter().enumerate() {
+    for (index, category) in quiz.categories.iter().enumerate() {
         // Categories are in left-to-right order; boxes are right-to-left.
         let center_x = x_values[5 - index] - board_x_offset + window.width() / 2.;
         let right = window.width() - center_x - box_size.x / 2.;
@@ -129,7 +152,7 @@ fn setup(
             .with_children(|parent| {
                 parent.spawn(
                     TextBundle::from_section(
-                        *category,
+                        &category.name,
                         TextStyle {
                             font: asset_server.load("korinan.ttf"),
                             font_size: 50.,
@@ -181,7 +204,7 @@ fn setup(
                 ),
                 ..Default::default()
             };
-            commands.spawn(new_box).insert(BoxObj);
+            commands.spawn(new_box).insert(BoxObj(i * 6 + j - 1));
         }
     }
 }
@@ -217,13 +240,14 @@ fn gen_text(s: &str, pos: Vec2, font: Handle<Font>, size: f32, color: Color) -> 
 fn user_click(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
-    mut box_query: Query<(Entity, &mut Transform, &Sprite), With<BoxObj>>,
+    mut box_query: Query<(&BoxObj, &mut Transform, &Sprite)>,
     mut text_query: Query<(&mut Style, &TextObj)>,
     clue_box_query: Query<Entity, With<ClueBox>>,
     clue_text_query: Query<Entity, With<ClueText>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
     mut reading: ResMut<ReadingClue>,
+    quiz: Res<Quiz>,
 ) {
     if mouse_input.just_pressed(MouseButton::Left) {
         if (reading.0) {
@@ -262,12 +286,14 @@ fn user_click(
                 mouse_pos_raw.y - (win.height() / 2.),
             );
             //println!("{}, {}", mouse_pos.x, mouse_pos.y);
-            let mut i: i32 = 0;
-            for (box_entity, mut box_tf, box_sprite) in box_query.iter_mut() {
+            for (box_obj, mut box_tf, box_sprite) in box_query.iter_mut() {
+                let Some(clue_text) = quiz.clue_for_box(box_obj.0) else {
+                    continue;
+                };
+                let i = box_obj.0 as i32;
                 //println!("Box: {}", box_tf.translation);
                 let box_size = box_sprite.custom_size.unwrap();
-                if ((i % 6) != 0
-                    && mouse_pos.x < box_tf.translation.x + (box_size.x / 2.)
+                if (mouse_pos.x < box_tf.translation.x + (box_size.x / 2.)
                     && mouse_pos.x > box_tf.translation.x - (box_size.x / 2.)
                     && mouse_pos.y < box_tf.translation.y + (box_size.y / 2.)
                     && mouse_pos.y > box_tf.translation.y - (box_size.y / 2.))
@@ -306,7 +332,6 @@ fn user_click(
                     };
                     commands.spawn(clue_box).insert(ClueBox);
 
-                    let clue_text: &str = get_clue(i);
                     let clue: TextBundle = gen_text(
                         clue_text,
                         Vec2::new(
@@ -339,7 +364,6 @@ fn user_click(
 
                     break;
                 }
-                i += 1;
             }
         }
     }
@@ -354,50 +378,4 @@ fn text_to_box_coords(n: i32) -> i32 {
         28, 22, 16, 10, 4, 35, 29, 23, 17, 11, 5,
     ];
     return nums[n as usize];
-}
-
-
-// Categories are reversed: pay close attention to categories
-fn get_clue(index: i32) -> &'static str {
-    // https://docs.google.com/document/d/19mHqRAi4TFoegb3A0rNJBlHo1A9bFoo9O-p8CRMd24Q/edit?usp=sharing
-    let mut clues: [&str; 36] = [
-        "<<<Random and Misc>>>",
-        "This “theme park” is set to open\non November 1st, 2022 at Aichi Earth Expo\nMemorial Park in Nagakute, Japan. It notably\nis experience based, and thus features no\nstandard rides.\n \n \n ",
-        "This style of painting is often used\nin early sketches for Ghibli films\nby Hayao Miyazaki, and makes sense considering\nthe kind of art styles that Ghibli\nfilms go for.\n \n \n ",
-        "Miyazaki announced his\nretirement from feature films shortly\nafter the release of this film.\n \n \n ",
-        "This movie is the most recent\nStudio Ghibli venture, which has seen releases\nfrom 2020-2021. It was\na multiple company procedure\n- not just Studio Ghibli - and was directed by\nHayao Miyazaki’s son, Goro. It, rather unfortunately,\nuses 3D animation, and has stellar reviews like\n“With a story as uninspired as its animation, [it is a]\nnear-total—misfire for Studio Ghibli.”",
-        "Disney began a partnership\nwith Studio Ghibli to aid\nin international releases in this year.\n \n \n ",
-        "<<<Scary Villains>>>",
-        "This large, elderly woman is primarily a villain\nbecause of her greed. She has a younger twin sister,\nloves her son Boh, and is the main antagonist\nin Spirited Away.\n \n \n ",
-        "This woman is seen as the secondary\nantagonist to Madame Suliman, since her\nrole becomes more complicated\nafter the start of her story. That being said,\nshe notably curses the main character,\nSophie, to look like an elderly woman:\nbased on the aging magic she uses\non herself to keep her\nlooking young. She stars in Howls Moving Castle.",
-        "The villain in this movie kidnaps the female\nlead, Sheeta, and holds her\ncaptive on an airship. It is\nfound that he is on the search for the kingdom\nof Laputa, which features magic that the\nmain protagonists end up having a connection to.\nThe main protagonist, Pazu, generally\nfoils his schemes.",
-        "This scruffy old fellow kidnaps\nthe main character and transforms her into a cat.\nHe notably has a purple gem on top of his\nhead that looks like a false eye, and his\ntwo real eyes are different colors: red\nand blue. He stars in The Cat Returns.\n \n \n ",
-        "This character is the father of the\nmain and title character, and is more complex \nand misguided than straight evil. He is a researcher,\nlives in an underwater harbor, and has had \nchildren with a sea goddess:\nexplaining key parts of the film.\nHis appearance is markedly whimsical\nand slender. He stars in Ponyo.",
-        "<<<Historical Knowledge>>>",
-        "Despite releasing just before Studio\nGhiblio fficially formed, this movie\nis generally cited as their first\nfilm, since it featured most of\nthe same creators (Hayao Miyazaki as\nthe director, for example), story themes, and art\nstyles found throughout the rest of Ghibli's portfolio.\n \n",
-        "This movie is the first feature film\nofficially released by Studio Ghibli, in spite of\nmany considering it their second film.\n \n \n ",
-        "This was the first movie directed\nby Hayao Miyazaki's son, Goro,\nwhich was famously hated by Hayao,\nand struggled at the box office and\nin reviews more so than\nother Ghibli works.\n \n ",
-        "This Studio Ghibli film\nwas released in 2013.\n \n \n \n ",
-        "This person helped found Studio\nGhibli as co-director with\nHayao Miyazaki, after working with Hayao and\nToshioSuzuki (a producer) at the\nanimation studio Topcraft.\n ",
-        "<<<Creatures and Animals>>>",
-        "This iconic black cat stars alongside\nthe main character witch in Kiki’s Delivery Service.\n \n \n ",
-        "This creature may be the only one that\nis also amode of transportation, and is\nrather anti-American considering its\napproval of public transit. It is\nalso of note that it is felinen\nin nature, which fits the general theme of its\nfilm’s woodland creatures.\n ",
-        "These tiny, black creatures \nare generally seen\ncarrying rocks or gems, and are seen in My\nNeighbor Totoro and Spirited Away.\nThey leave black dust as they walk\naround, and temporarily dissolve when crushed.\n \n \n ",
-        "This lazy dog — inspired by a\nFrench hunting dog breed —\nis owned as the “errand dog”\n by the villain Suliman.\nHe is a character for the film\nHowl’s Moving Castle.\n ",
-        "This pet “Fox Squirrel” was given as\na gift to the main character, who\ngives a little aggression before becoming friends.\nHe stars in Nausicaä of\nthe Valley of the Wind.\n \n \n \n ",
-        "<<<Humans (Mostly)>>>",
-        "This helpful young boy ensures the\nsuccess of the young girl\nprotagonist, but is later revealed\nto have a dragon form. He is a\ncharacter from the film Spirited Away.\n \n \n ",
-        "This young boy saves a goldfish in his seaside town,\nwhich licks his cut finger to prove its mortality.\nHe is also the love interest, and co main character\nwith the film titled character Ponyo.\n \n \n ",
-        "This 10 year old girl stars in My Neighbor Totoro,\nand has a 4 year old sister named Mei.\nShe struggles with her mother who is sick, and is\ntaken on some magical journeys with the movie’s\nwoodland creatures: primarily Totoro.\n \n ",
-        "This young girl stars in The Cat Returns\nas the one taken by the feline prince for\nmarriage in the life of a cat.\n \n \n ",
-        "This 16 year old girl is known as\n“the girl who raises red flags”, based\non the tragic death of her father in the\nKorean war. She lives in Coquelicot Manor, and is\nthe star of From Up on Poppy Hill.\n \n ",
-        "<<<General Movies>>>",
-        "This Ghibli film\nfamously features\na humanoid pig\nas its main character.\n \n \n ",
-        "This Ghibli film stars a young girl\nwho stumbles upon a furry, woodland creature,\nwho helps her in rather magical ways.\n \n \n ",
-        "This Ghibli film has a main location\nof a whimsical bathhouse, despite starting\non a simple car ride and stumbling\nupon a unique market-town.\n \n \n ",
-        "This Ghibli film lands on the more serious\nside of Ghibli films, primarily because\nof it taking place in World War II, and features\nfirebombing, along with children struggling\nto survive on their own. \n ",
-        "This Ghibli film has one of the most obvious\nenvironmentalist messages, features many\nanimal gods such as a boar, a deer,\nand wolves, and stars a warrior princess.\n \n \n ",
-    ];
-    println!("{} => {}", index, clues[index as usize]);
-    return clues[index as usize];
 }
